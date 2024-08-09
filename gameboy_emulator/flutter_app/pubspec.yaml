@@ -1,0 +1,19 @@
+name: flutter_app
+description: A new Flutter project.
+
+environment:
+  sdk: '^3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: ^1.80.0
+  ffi: ^2.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  ffigen: ^8.0.1
+
+flutter:
+  uses-material-design: true
