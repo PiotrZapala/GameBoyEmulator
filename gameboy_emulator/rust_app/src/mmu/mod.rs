@@ -23,6 +23,18 @@ impl MMU {
         }
     }
 
+    pub fn fetch_instruction(&self, pc: u16) -> u8 {
+        self.read_byte(pc)
+    }
+
+    pub fn fetch_u8(&self, pc: u16) -> u8 {
+        self.read_byte(pc)
+    }
+
+    pub fn fetch_i8(&self, pc: u16) -> i8 {
+        self.read_byte(pc) as i8
+    }
+
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
             0x0000..=0x7FFF => self.rom[address as usize],           // ROM
