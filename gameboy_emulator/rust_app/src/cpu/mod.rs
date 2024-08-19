@@ -1,4 +1,5 @@
 use crate::mmu::MMU;
+use crate::timer::TIMER;
 
 pub struct CPU {
     pub a: u8,
@@ -12,10 +13,11 @@ pub struct CPU {
     pub pc: u16,
     pub sp: u16,
     pub mmu: MMU,
+    pub timer: TIMER,
 }
 
 impl CPU {
-    pub fn new(mmu: MMU) -> Self {
+    pub fn new(mmu: MMU, timer: TIMER) -> Self {
         CPU {
             a: 0,
             b: 0,
@@ -28,10 +30,11 @@ impl CPU {
             pc: 0,
             sp: 0,
             mmu,
+            timer,
         }
     }
 
-    pub fn execute(&mut self, opcode: u8) {
+    pub fn tick(&mut self, opcode: u8) {
         if opcode != 0xCB {
             self.execute_not_prefixed_instruction(opcode);
         } else {
@@ -80,6 +83,7 @@ impl CPU {
         let result = register.wrapping_add(1);
         let zero = result == 0;
         self.update_flags(Some(zero), None, Some(false), Some(half_carry));
+        self.timer.add_cycles(4);
         self.pc += 1;
         result
     }
@@ -89,6 +93,7 @@ impl CPU {
         let result = register.wrapping_sub(1);
         let zero = result == 0;
         self.update_flags(Some(zero), None, Some(true), Some(half_carry));
+        self.timer.add_cycles(4);
         self.pc += 1;
         result
     }
@@ -99,6 +104,7 @@ impl CPU {
         let new_register1 = (result >> 8) as u8;
         let new_register2 = (result & 0xFF) as u8;
         self.pc += 1;
+        self.timer.add_cycles(8);
         (new_register1, new_register2)
     }
 
@@ -108,16 +114,19 @@ impl CPU {
         let new_register1 = (result >> 8) as u8;
         let new_register2 = (result & 0xFF) as u8;
         self.pc += 1;
+        self.timer.add_cycles(8);
         (new_register1, new_register2)
     }
 
     fn inc_sp(&mut self) {
         self.sp = self.sp.wrapping_add(1);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
     fn dec_sp(&mut self) {
         self.sp = self.sp.wrapping_sub(1);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -129,6 +138,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), None, Some(false), Some(half_carry));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(12);
         self.pc += 1;
     }
 
@@ -140,6 +150,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), None, Some(true), Some(half_carry));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(12);
         self.pc += 1;
     }
     
@@ -148,6 +159,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) + (register & 0xF) > 0xF;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(4);
         self.a = result;
         self.pc += 1;
     }
@@ -158,6 +170,7 @@ impl CPU {
         let (result, carry) = combined1.overflowing_add(combined2);
         let half_carry = (combined1 & 0x0FFF) + (combined2 & 0x0FFF) > 0x0FFF;
         self.update_flags(None, Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.h = (result >> 8) as u8;
         self.l = (result & 0xFF) as u8;
         self.pc += 1;
@@ -168,6 +181,7 @@ impl CPU {
         let (result, carry) = combined.overflowing_add(self.sp);
         let half_carry = (combined & 0x0FFF) + (self.sp & 0x0FFF) > 0x0FFF;
         self.update_flags(None, Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.h = (result >> 8) as u8;
         self.l = (result & 0xFF) as u8;
         self.pc += 1;
@@ -180,6 +194,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) + (value & 0xF) > 0xF;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result;
         self.pc += 1;
     }
@@ -190,6 +205,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) + (value & 0xF) > 0xF;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result;
         self.pc += 2;
     }
@@ -200,6 +216,7 @@ impl CPU {
         let (result, carry) = self.sp.overflowing_add(signed_value);
         let half_carry = (self.sp & 0x0F) + (signed_value & 0x0F) > 0x0F;
         self.update_flags(Some(false), Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(16);
         self.sp = result;
         self.pc += 2;
     }
@@ -212,6 +229,7 @@ impl CPU {
         let zero = result2 == 0;
         let half_carry = (self.a & 0xF) + (register & 0xF) + carry_flag > 0xF;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(4);
         self.a = result2;
         self.pc += 1;
     }
@@ -226,6 +244,7 @@ impl CPU {
         let zero = result2 == 0;
         let half_carry = (self.a & 0xF) + (value & 0xF) + carry_flag > 0xF;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result2;
         self.pc += 1;
     }
@@ -239,6 +258,7 @@ impl CPU {
         let zero = result2 == 0;
         let half_carry = (self.a & 0xF) + (value & 0xF) + carry_flag > 0xF;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result2;
         self.pc += 2;
     }
@@ -248,6 +268,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) < (register & 0xF);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(4);
         self.a = result;
         self.pc += 1;
     }
@@ -259,6 +280,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) < (value & 0xF);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result;
         self.pc += 1;
     }
@@ -269,6 +291,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) < (value & 0xF);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result;
         self.pc += 2;
     }
@@ -281,6 +304,7 @@ impl CPU {
         let zero = result2 == 0;
         let half_carry = (self.a & 0xF) < ((register & 0xF) + carry_flag);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(4);
         self.a = result2;
         self.pc += 1;
     }
@@ -295,6 +319,7 @@ impl CPU {
         let zero = result2 == 0;
         let half_carry = (self.a & 0xF) < ((value & 0xF) + carry_flag);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result2;
         self.pc += 1;
     }
@@ -308,6 +333,7 @@ impl CPU {
         let zero = result2 == 0;
         let half_carry = (self.a & 0xF) < ((value & 0xF) + carry_flag);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(8);
         self.a = result2;
         self.pc += 2;
     }
@@ -317,6 +343,7 @@ impl CPU {
         let zero = self.a == 0;
         let half_carry = true;
         self.update_flags(Some(zero), Some(false), Some(false), Some(half_carry));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
@@ -327,6 +354,7 @@ impl CPU {
         let zero = self.a == 0;
         let half_carry = true;
         self.update_flags(Some(zero), Some(false), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -336,6 +364,7 @@ impl CPU {
         let zero = self.a == 0;
         let half_carry = true;
         self.update_flags(Some(zero), Some(false), Some(false), Some(half_carry));
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -343,6 +372,7 @@ impl CPU {
         self.a ^= register;
         let zero = self.a == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
@@ -352,6 +382,7 @@ impl CPU {
         self.a ^= value;
         let zero = self.a == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -360,6 +391,7 @@ impl CPU {
         self.a ^= value;
         let zero = self.a == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
@@ -367,6 +399,7 @@ impl CPU {
         self.a |= register;
         let zero = self.a == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
@@ -376,6 +409,7 @@ impl CPU {
         self.a |= value;
         let zero = self.a == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -384,6 +418,7 @@ impl CPU {
         self.a |= value;
         let zero = self.a == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
@@ -392,6 +427,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) < (register & 0xF);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
@@ -402,6 +438,7 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) < (value & 0xF);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -411,83 +448,91 @@ impl CPU {
         let zero = result == 0;
         let half_carry = (self.a & 0xF) < (value & 0xF);
         self.update_flags(Some(zero), Some(carry), Some(true), Some(half_carry));
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
-    #[inline(always)]
     fn ld_b_r_u8(&mut self, register: u8) {
         self.b = register;
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
-    #[inline(always)]
     fn ld_c_r_u8(&mut self, register: u8) {
         self.c = register;
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
-    #[inline(always)]
     fn ld_d_r_u8(&mut self, register: u8) {
         self.d = register;
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
-    #[inline(always)]
     fn ld_e_r_u8(&mut self, register: u8) {
         self.e = register;
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
-    #[inline(always)]
     fn ld_h_r_u8(&mut self, register: u8) {
         self.h = register;
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
-    #[inline(always)]
     fn ld_l_r_u8(&mut self, register: u8) {
         self.l = register;
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
-    #[inline(always)]
     fn ld_a_r_u8(&mut self, register: u8) {
         self.a = register;
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
     fn ld_b_u8(&mut self) {
         self.b = self.mmu.fetch_u8(self.pc + 1);
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
     fn ld_c_u8(&mut self) {
         self.c = self.mmu.fetch_u8(self.pc + 1);
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
     fn ld_d_u8(&mut self) {
         self.d = self.mmu.fetch_u8(self.pc + 1);
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
     fn ld_e_u8(&mut self) {
         self.e = self.mmu.fetch_u8(self.pc + 1);
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
     fn ld_h_u8(&mut self) {
         self.h = self.mmu.fetch_u8(self.pc + 1);
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
     fn ld_l_u8(&mut self) {
         self.l = self.mmu.fetch_u8(self.pc + 1);
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
     fn ld_a_u8(&mut self) {
         self.a = self.mmu.fetch_u8(self.pc + 1);
+        self.timer.add_cycles(8);
         self.pc += 2;
     }
 
@@ -495,41 +540,48 @@ impl CPU {
         let value = self.mmu.fetch_u8(self.pc + 1);
         let address = ((self.h as u16) << 8) | (self.l as u16);
         self.mmu.write_byte(address, value);
+        self.timer.add_cycles(12);
         self.pc += 2;
     }
 
     fn ld_bc_u16(&mut self) {
         self.c = self.mmu.fetch_u8(self.pc + 1);
         self.b = self.mmu.fetch_u8(self.pc + 2);
+        self.timer.add_cycles(12);
         self.pc += 3;
     }
 
     fn ld_de_u16(&mut self) {
         self.e = self.mmu.fetch_u8(self.pc + 1);
         self.d = self.mmu.fetch_u8(self.pc + 2);
+        self.timer.add_cycles(12);
         self.pc += 3;
     }
 
     fn ld_hl_u16(&mut self) {
         self.l = self.mmu.fetch_u8(self.pc + 1);
         self.h = self.mmu.fetch_u8(self.pc + 2);
+        self.timer.add_cycles(12);
         self.pc += 3;
     }
 
     fn ld_sp_u16(&mut self) {
         self.sp = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        self.timer.add_cycles(12);
         self.pc += 3;
     }
 
     fn ld_m_r_u16_a(&mut self, register1: u8, register2: u8) {
         let address = ((register1 as u16) << 8) | (register2 as u16);
         self.mmu.write_byte(address, self.a);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
     fn ld_a_m_r_u16(&mut self, register1: u8, register2: u8) {
         let address = ((register1 as u16) << 8) | (register2 as u16);
         self.a = self.mmu.read_byte(address);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -539,6 +591,7 @@ impl CPU {
         let incremented_address = address.wrapping_add(1);
         self.h = (incremented_address >> 8) as u8;
         self.l = (incremented_address & 0xFF) as u8;
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -548,6 +601,7 @@ impl CPU {
         let incremented_address = address.wrapping_add(1);
         self.h = (incremented_address >> 8) as u8;
         self.l = (incremented_address & 0xFF) as u8;
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -557,6 +611,7 @@ impl CPU {
         let decremented_address = address.wrapping_sub(1);
         self.h = (decremented_address >> 8) as u8;
         self.l = (decremented_address & 0xFF) as u8;
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -566,18 +621,21 @@ impl CPU {
         let decremented_address = address.wrapping_sub(1);
         self.h = (decremented_address >> 8) as u8;
         self.l = (decremented_address & 0xFF) as u8;
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
     fn ld_m_hl_r_u8(&mut self, register: u8) {
         let address = ((self.h as u16) << 8) | (self.l as u16);
         self.mmu.write_byte(address, register);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
     fn ld_r_u8_m_hl(&mut self) -> u8 {
         let address = ((self.h as u16) << 8) | (self.l as u16);
         let value = self.mmu.read_byte(address);
+        self.timer.add_cycles(8);
         self.pc += 1;  
         value
     }
@@ -588,11 +646,13 @@ impl CPU {
         let upper_byte = (self.sp >> 8) as u8;
         self.mmu.write_byte(address, lower_byte);
         self.mmu.write_byte(address + 1, upper_byte);
+        self.timer.add_cycles(20);
         self.pc += 3;
     }
 
     fn ld_sp_hl(&mut self) {
         self.sp = ((self.h as u16) << 8) | (self.l as u16);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -600,6 +660,7 @@ impl CPU {
         let value = self.mmu.fetch_u8(self.pc + 1) as u16;
         let address = 0xFF00 + value;
         self.mmu.write_byte(address, self.a);
+        self.timer.add_cycles(12);
         self.pc += 2;
     }
 
@@ -607,6 +668,7 @@ impl CPU {
         let value = self.mmu.fetch_u8(self.pc + 1) as u16;
         let address = 0xFF00 + value;
         self.a = self.mmu.read_byte(address);
+        self.timer.add_cycles(12);
         self.pc += 2;
     }
 
@@ -614,6 +676,7 @@ impl CPU {
         let value = self.c as u16;
         let address = 0xFF00 + value;
         self.mmu.write_byte(address, self.a);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -621,18 +684,21 @@ impl CPU {
         let value = self.c as u16;
         let address = 0xFF00 + value;
         self.a = self.mmu.read_byte(address);
+        self.timer.add_cycles(8);
         self.pc += 1;
     }    
 
     fn ld_a_u16(&mut self) {
         let address = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
         self.a = self.mmu.read_byte(address);
+        self.timer.add_cycles(16);
         self.pc += 3;
     }
 
     fn ld_u16_a(&mut self) {
         let address = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
         self.mmu.write_byte(address, self.a);
+        self.timer.add_cycles(16);
         self.pc += 3;
     }
 
@@ -644,7 +710,320 @@ impl CPU {
         self.update_flags(Some(false), Some(carry), Some(false), Some(half_carry));
         self.h = (result >> 8) as u8;
         self.l = (result & 0xFF) as u8;
+        self.timer.add_cycles(12);
         self.pc += 2;      
+    }
+
+    fn jr_i8(&mut self) {
+        let offset = self.mmu.fetch_i8(self.pc + 1);
+        let signed_value = offset as i16 as u16;
+        let (result, _) = self.pc.overflowing_add(signed_value);
+        self.timer.add_cycles(12);
+        self.pc = result;
+    }
+
+    fn jr_nz_i8(&mut self) {
+        let offset = self.mmu.fetch_i8(self.pc + 1);
+        let signed_value = offset as i16 as u16;
+        if (self.f & 0x80) >> 7 != 1 {
+            let (result, _) = self.pc.overflowing_add(signed_value);
+            self.timer.add_cycles(12);
+            self.pc = result;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 2;
+        }
+    }
+
+    fn jr_z_i8(&mut self) {
+        let offset = self.mmu.fetch_i8(self.pc + 1);
+        let signed_value = offset as i16 as u16;
+        if (self.f & 0x80) >> 7 == 1 {
+            let (result, _) = self.pc.overflowing_add(signed_value);
+            self.timer.add_cycles(12);
+            self.pc = result;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 2;
+        }
+    }
+
+    fn jr_nc_i8(&mut self) {
+        let offset = self.mmu.fetch_i8(self.pc + 1);
+        let signed_value = offset as i16 as u16;      
+        if (self.f & 0x10) >> 4 != 1 {
+            let (result, _) = self.pc.overflowing_add(signed_value);
+            self.timer.add_cycles(12);
+            self.pc = result;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 2;
+        }
+    }
+
+    fn jr_c_i8(&mut self) {
+        let offset = self.mmu.fetch_i8(self.pc + 1);
+        let signed_value = offset as i16 as u16;
+        if (self.f & 0x10) >> 4 == 1 {
+            let (result, _) = self.pc.overflowing_add(signed_value);
+            self.timer.add_cycles(12);
+            self.pc = result;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 2;
+        }
+    }
+
+    fn jp_hl(&mut self) {
+        self.timer.add_cycles(4);
+        self.pc = ((self.h as u16) << 8) | (self.l as u16);
+    }
+
+    fn jp_u16(&mut self) {
+        self.timer.add_cycles(16);
+        self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+    }
+ 
+    fn jp_nz_u16(&mut self) {
+        if (self.f & 0x80) >> 7 != 1 {
+            self.timer.add_cycles(16);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+            self.pc += 3;
+        }        
+    }
+
+    fn jp_z_u16(&mut self) {
+        if (self.f & 0x80) >> 7 == 1 {
+            self.timer.add_cycles(16);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+            self.pc += 3;
+        }        
+    }
+
+    fn jp_nc_u16(&mut self) {
+        if (self.f & 0x10) >> 4 != 1 {
+            self.timer.add_cycles(16);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+            self.pc += 3;
+        }        
+    }
+
+    fn jp_c_u16(&mut self) {
+        if (self.f & 0x10) >> 4 == 1 {
+            self.timer.add_cycles(16);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+            self.pc += 3;
+        }        
+    }
+
+    fn pop_bc(&mut self) {
+        self.b = self.mmu.fetch_u8(self.sp + 1);
+        self.c = self.mmu.fetch_u8(self.sp);
+        self.sp += 2;
+        self.timer.add_cycles(12);
+        self.pc += 1;
+    }
+
+    fn pop_de(&mut self) {
+        self.d = self.mmu.fetch_u8(self.sp + 1);
+        self.e = self.mmu.fetch_u8(self.sp);
+        self.sp += 2;
+        self.timer.add_cycles(12);
+        self.pc += 1;
+    }
+
+    fn pop_hl(&mut self) {
+        self.h = self.mmu.fetch_u8(self.sp + 1);
+        self.l = self.mmu.fetch_u8(self.sp);
+        self.sp += 2;
+        self.timer.add_cycles(12);
+        self.pc += 1;
+    }
+
+    fn pop_af(&mut self) {
+        self.a = self.mmu.fetch_u8(self.sp + 1);
+        let f = self.mmu.fetch_u8(self.sp);
+        self.update_flags(
+            Some(f & 0x80 != 0),
+            Some(f & 0x10 != 0),
+            Some(f & 0x40 != 0),
+            Some(f & 0x20 != 0),
+        );
+        self.sp += 2;
+        self.timer.add_cycles(12);
+        self.pc += 1;
+    }
+
+    fn push_bc(&mut self) {
+        self.sp -= 2;
+        self.mmu.write_byte(self.sp + 1, self.b);
+        self.mmu.write_byte(self.sp, self.c);
+        self.timer.add_cycles(16);
+        self.pc += 1;
+    }
+
+    fn push_de(&mut self) {
+        self.sp -= 2;
+        self.mmu.write_byte(self.sp + 1, self.d);
+        self.mmu.write_byte(self.sp, self.e);
+        self.timer.add_cycles(16);
+        self.pc += 1;
+    }
+
+    fn push_hl(&mut self) {
+        self.sp -= 2;
+        self.mmu.write_byte(self.sp + 1, self.h);
+        self.mmu.write_byte(self.sp, self.l);
+        self.timer.add_cycles(16);
+        self.pc += 1;
+    }
+
+    fn push_af(&mut self) {
+        self.sp -= 2;
+        self.mmu.write_byte(self.sp + 1, self.a);
+        self.mmu.write_byte(self.sp, self.f);
+        self.timer.add_cycles(16);
+        self.pc += 1;
+    }
+
+    fn call_u16(&mut self) {
+        self.pc += 3;
+        let lower_byte = (self.pc & 0xFF) as u8;
+        let upper_byte = (self.pc >> 8) as u8;
+        self.sp -= 2;
+        self.mmu.write_byte(self.sp + 1, upper_byte);
+        self.mmu.write_byte(self.sp, lower_byte);
+        self.timer.add_cycles(24);
+        self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+    }
+
+    fn call_nz_u16(&mut self) {
+        self.pc += 3;
+        if (self.f & 0x80) >> 7 != 1 {
+            let lower_byte = (self.pc & 0xFF) as u8;
+            let upper_byte = (self.pc >> 8) as u8;
+            self.sp -= 2;
+            self.mmu.write_byte(self.sp + 1, upper_byte);
+            self.mmu.write_byte(self.sp, lower_byte);
+            self.timer.add_cycles(24);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+        }  
+    }
+
+    fn call_z_u16(&mut self) {
+        self.pc += 3;
+        if (self.f & 0x80) >> 7 == 1 {
+            let lower_byte = (self.pc & 0xFF) as u8;
+            let upper_byte = (self.pc >> 8) as u8;
+            self.sp -= 2;
+            self.mmu.write_byte(self.sp + 1, upper_byte);
+            self.mmu.write_byte(self.sp, lower_byte);
+            self.timer.add_cycles(24);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+        }     
+    }
+
+    fn call_nc_u16(&mut self) {
+        self.pc += 3;
+        if (self.f & 0x10) >> 4 != 1 {
+            let lower_byte = (self.pc & 0xFF) as u8;
+            let upper_byte = (self.pc >> 8) as u8;
+            self.sp -= 2;
+            self.mmu.write_byte(self.sp + 1, upper_byte);
+            self.mmu.write_byte(self.sp, lower_byte);
+            self.timer.add_cycles(24);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+        }            
+    }
+
+    fn call_c_u16(&mut self) {
+        self.pc += 3;
+        if (self.f & 0x10) >> 4 == 1 {
+            let lower_byte = (self.pc & 0xFF) as u8;
+            let upper_byte = (self.pc >> 8) as u8;
+            self.sp -= 2;
+            self.mmu.write_byte(self.sp + 1, upper_byte);
+            self.mmu.write_byte(self.sp, lower_byte);
+            self.timer.add_cycles(24);
+            self.pc = ((self.mmu.fetch_u8(self.pc + 2) as u16) << 8) | (self.mmu.fetch_u8(self.pc + 1) as u16);
+        } else {
+            self.timer.add_cycles(12);
+        }     
+    }
+
+    fn ret(&mut self) {
+        self.timer.add_cycles(16);
+        self.pc = ((self.mmu.fetch_u8(self.sp + 1) as u16) << 8) | (self.mmu.fetch_u8(self.sp) as u16); 
+        self.sp += 2;
+    }
+
+    fn ret_nz(&mut self) {
+        if (self.f & 0x80) >> 7 != 1 {
+            self.timer.add_cycles(20);
+            self.pc = ((self.mmu.fetch_u8(self.sp + 1) as u16) << 8) | (self.mmu.fetch_u8(self.sp) as u16); 
+            self.sp += 2;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 1;
+        }         
+    }
+
+    fn ret_z(&mut self) {
+        if (self.f & 0x80) >> 7 == 1 {
+            self.timer.add_cycles(20);
+            self.pc = ((self.mmu.fetch_u8(self.sp + 1) as u16) << 8) | (self.mmu.fetch_u8(self.sp) as u16); 
+            self.sp += 2;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 1;
+        }        
+    }
+
+    fn ret_nc(&mut self) {
+        if (self.f & 0x10) >> 4 != 1 {
+            self.timer.add_cycles(20);
+            self.pc = ((self.mmu.fetch_u8(self.sp + 1) as u16) << 8) | (self.mmu.fetch_u8(self.sp) as u16); 
+            self.sp += 2;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 1;
+        }         
+    }
+
+    fn ret_c(&mut self) {
+        if (self.f & 0x10) >> 4 == 1 {
+            self.timer.add_cycles(20);
+            self.pc = ((self.mmu.fetch_u8(self.sp + 1) as u16) << 8) | (self.mmu.fetch_u8(self.sp) as u16); 
+            self.sp += 2;
+        } else {
+            self.timer.add_cycles(8);
+            self.pc += 1;
+        }         
+    }
+
+    fn rst(&mut self, address: u16) {
+        self.pc += 1;
+        let lower_byte = (self.pc & 0xFF) as u8;
+        let upper_byte = (self.pc >> 8) as u8;
+        self.sp -= 2;
+        self.mmu.write_byte(self.sp + 1, upper_byte);
+        self.mmu.write_byte(self.sp, lower_byte);
+        self.timer.add_cycles(16);
+        self.pc = address;
     }
 
     fn rlca(&mut self) {
@@ -652,6 +1031,7 @@ impl CPU {
         self.a = (self.a << 1) | carry_flag;
         let carry = carry_flag != 0;
         self.update_flags(Some(false), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
@@ -660,6 +1040,7 @@ impl CPU {
         self.a = (self.a >> 1) | (carry_flag << 7);
         let carry = carry_flag != 0;
         self.update_flags(Some(false), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
@@ -668,6 +1049,7 @@ impl CPU {
         self.a = (self.a << 1) | ((self.f & 0x10) >> 4);
         let carry = carry_flag != 0;
         self.update_flags(Some(false), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }   
 
@@ -676,23 +1058,48 @@ impl CPU {
         self.a = (self.a >> 1) | ((self.f & 0x10) << 3);
         let carry = carry_flag != 0;
         self.update_flags(Some(false), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
+    fn daa(&mut self) {
+        let mut correction = 0;
+        let mut carry = false;
+        if self.f & 0x20 != 0 || (self.a & 0x0F) > 0x09 {
+            correction |= 0x06;
+        }
+        if self.f & 0x10 != 0 || (self.a >> 4) > 0x09 {
+            correction |= 0x60;
+            carry = true;
+        }
+        if self.f & 0x40 != 0 {
+            self.a = self.a.wrapping_sub(correction);
+        } else {
+            self.a = self.a.wrapping_add(correction);
+        }
+        let zero = self.a == 0;
+        self.update_flags(Some(zero), Some(carry), None, Some(false));
+        self.timer.add_cycles(4);
+        self.pc += 1;
+    }
+    
     fn cpl(&mut self) {
         self.a = !self.a;
         self.update_flags(None, None, Some(true), Some(true));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
     fn scf(&mut self) {
         self.update_flags(None, Some(true), Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
     fn ccf(&mut self) {
         self.f ^= 0x10;
         self.update_flags(None, None, Some(false), Some(false));
+        self.timer.add_cycles(4);
         self.pc += 1;
     }
 
@@ -702,6 +1109,7 @@ impl CPU {
         let carry = carry_flag != 0;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -715,6 +1123,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
@@ -724,6 +1133,7 @@ impl CPU {
         let carry = carry_flag != 0;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -737,6 +1147,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
@@ -746,6 +1157,7 @@ impl CPU {
         let carry = carry_flag != 0;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -759,6 +1171,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
     
@@ -768,6 +1181,7 @@ impl CPU {
         let carry = carry_flag != 0;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -781,6 +1195,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
@@ -790,6 +1205,7 @@ impl CPU {
         let carry = carry_flag != 0;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -803,6 +1219,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
@@ -812,6 +1229,7 @@ impl CPU {
         let carry = carry_flag != 0;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -825,6 +1243,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
@@ -832,6 +1251,7 @@ impl CPU {
         let result = register >> 4 | register << 4;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -843,6 +1263,7 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(false), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
@@ -852,6 +1273,7 @@ impl CPU {
         let carry = carry_flag != 0;
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
+        self.timer.add_cycles(8);
         self.pc += 1;
         result
     }
@@ -865,12 +1287,14 @@ impl CPU {
         let zero = result == 0;
         self.update_flags(Some(zero), Some(carry), Some(false), Some(false));
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
     fn bit_n_r_u8(&mut self, bit: u8, register: u8) {
         let zero = (register & (1 << bit)) != 0;
         self.update_flags(Some(zero), None, Some(false), Some(true));
+        self.timer.add_cycles(8);
         self.pc += 1;
     }
 
@@ -879,11 +1303,13 @@ impl CPU {
         let value = self.mmu.read_byte(address);
         let zero = (value & (1 << bit)) != 0;
         self.update_flags(Some(zero), None, Some(false), Some(true));
+        self.timer.add_cycles(12);
         self.pc += 1;
     }
 
     fn res_n_r_u8(&mut self, bit: u8, register: u8) -> u8 {
         self.pc += 1;
+        self.timer.add_cycles(8);
         register & !(1 << bit)
     }
 
@@ -892,11 +1318,13 @@ impl CPU {
         let value = self.mmu.read_byte(address);
         let result = value & !(1 << bit);
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
     fn set_n_r_u8(&mut self, bit: u8, register: u8) -> u8 {
         self.pc += 1;
+        self.timer.add_cycles(8);
         register | 1 << bit
     }
 
@@ -905,6 +1333,7 @@ impl CPU {
         let value = self.mmu.read_byte(address);     
         let result = value | 1 << bit;
         self.mmu.write_byte(address, result);
+        self.timer.add_cycles(16);
         self.pc += 1;
     }
 
@@ -958,18 +1387,23 @@ impl CPU {
                     },
                     3 => {
                         println!("JR d");
+                        self.jr_i8();
                     },
                     4 => {
                         println!("JR NZ, d");
+                        self.jr_nz_i8();
                     },
                     5 => {
                         println!("JR Z, d");
+                        self.jr_z_i8();
                     },
                     6 => {
                         println!("JR NC, d");
+                        self.jr_nc_i8();
                     },
                     7 => {
                         println!("JR C, d");
+                        self.jr_c_i8();
                     },
                     _ => unreachable!(),
                 }
@@ -1256,6 +1690,7 @@ impl CPU {
                     },
                     4 => {
                         println!("DAA");
+                        self.daa();
                     },
                     5 => {
                         println!("CPL");
@@ -1911,15 +2346,19 @@ impl CPU {
                 match bits_5_4_3 {
                     0 => {
                         println!("RET NZ");
+                        self.ret_nz();
                     },
                     1 => {
                         println!("RET Z");
+                        self.ret_z();
                     },
                     2 => {
                         println!("RET NC");
+                        self.ret_nc();
                     },
                     3 => {
                         println!("RET C");
+                        self.ret_c();
                     },
                     4 => {
                         println!("LD (0xFF00+n), A");
@@ -1944,24 +2383,30 @@ impl CPU {
                 match bits_5_4_3 {
                     0 => {
                         println!("POP BC");
+                        self.pop_bc();
                     },
                     1 => {
                         println!("RET");
+                        self.ret();
                     },
                     2 => {
                         println!("POP DE");
+                        self.pop_de();
                     },
                     3 => {
                         println!("RETI");
                     },
                     4 => {
                         println!("POP HL");
+                        self.pop_hl();
                     },
                     5 => {
                         println!("JP HL");
+                        self.jp_hl();
                     },
                     6 => {
                         println!("POP AF");
+                        self.pop_af();
                     },
                     7 => {
                         println!("LD SP, HL");
@@ -1974,15 +2419,19 @@ impl CPU {
                 match bits_5_4_3 {
                     0 => {
                         println!("JP NZ, nn");
+                        self.jp_nz_u16();
                     },
                     1 => {
                         println!("JP Z, nn");
+                        self.jp_z_u16();
                     },
                     2 => {
                         println!("JP NC, nn");
+                        self.jp_nc_u16();
                     },
                     3 => {
                         println!("JP C, nn");
+                        self.jp_c_u16();
                     },
                     4 => {
                         println!("LD (0xFF00+C), A");
@@ -2007,6 +2456,7 @@ impl CPU {
                 match bits_5_4_3 {
                     0 => {
                         println!("JP nn");
+                        self.jp_u16();
                     },
                     1 => {
                         println!("PREFIX CB");
@@ -2024,15 +2474,19 @@ impl CPU {
                 match bits_5_4_3 {
                     0 => {
                         println!("CALL NZ, nn");
+                        self.call_nz_u16();
                     },
                     1 => {
                         println!("CALL Z, nn");
+                        self.call_z_u16();
                     },
                     2 => {
                         println!("CALL NC, nn");
+                        self.call_nc_u16();
                     },
                     3 => {
                         println!("CALL C, nn");
+                        self.call_c_u16();
                     },
                     _ => unreachable!(),
                 }
@@ -2041,18 +2495,23 @@ impl CPU {
                 match bits_5_4_3 {
                     0 => {
                         println!("PUSH BC");
+                        self.push_bc();
                     },
                     1 => {
                         println!("CALL nn");
+                        self.call_u16();
                     },
                     2 => {
                         println!("PUSH DE");
+                        self.push_de();
                     },
                     4 => {
                         println!("PUSH HL");
+                        self.push_hl();
                     },
                     6 => {
                         println!("PUSH AF");
+                        self.push_af();
                     },
                     _ => unreachable!(),
                 }
@@ -2098,27 +2557,35 @@ impl CPU {
                 match bits_5_4_3 {
                     0 => {
                         println!("RST 00h");
+                        self.rst(0x0000);
                     },
                     1 => {
                         println!("RST 08h");
+                        self.rst(0x0008);
                     },
                     2 => {
                         println!("RST 10h");
+                        self.rst(0x0010);
                     },
                     3 => {
                         println!("RST 18h");
+                        self.rst(0x0018);
                     },
                     4 => {
                         println!("RST 20h");
+                        self.rst(0x0020);
                     },
                     5 => {
                         println!("RST 28h");
+                        self.rst(0x0028);
                     },
                     6 => {
                         println!("RST 30h");
+                        self.rst(0x0030);
                     },
                     7 => {
                         println!("RST 38h");
+                        self.rst(0x0038);
                     },
                     _ => unreachable!(),
                 }
