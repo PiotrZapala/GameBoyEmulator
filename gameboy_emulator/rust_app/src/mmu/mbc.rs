@@ -13,9 +13,6 @@ pub fn create_mbc(cartridge: CARTRIDGE) -> Box<dyn MBC> {
         0x01 => Box::new(MBC1::new(cartridge.rom, None, false)),                              // MBC1
         0x02 => Box::new(MBC1::new(cartridge.rom, Some(cartridge.ram_size as usize), false)), // MBC1 + RAM
         0x03 => Box::new(MBC1::new(cartridge.rom, Some(cartridge.ram_size as usize), true)),  // MBC1 + RAM + BATTERY
-        //0x11 => Box::new(MBC3::new(cartridge.rom, None, false)),                            // MBC3
-        //0x12 => Box::new(MBC3::new(cartridge.rom, cartridge.ram_size, false)),              // MBC3 + RAM
-        //0x13 => Box::new(MBC3::new(cartridge.rom, cartridge.ram_size, true)),               // MBC3 + RAM + BATTERY
         _ => panic!("Unsupported MBC type"),
     }
 }

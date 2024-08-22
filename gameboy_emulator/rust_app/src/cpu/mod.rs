@@ -4,6 +4,9 @@ use crate::mmu::MMU;
 use crate::timer::TIMER;
 use instructions::*;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 pub enum INTERRUPT {
     VBlank = 0x0040,
     LCDStat = 0x0048,
@@ -48,12 +51,12 @@ pub struct CPU {
     pub sp: u16,
     pub ime: bool,
     pub halted: bool,
-    pub mmu: MMU,
-    pub timer: TIMER,
+    pub mmu: Rc<RefCell<MMU>>,
+    pub timer: Rc<RefCell<TIMER>>,
 }
 
 impl CPU {
-    pub fn new(mmu: MMU, timer: TIMER) -> Self {
+    pub fn new(mmu: Rc<RefCell<MMU>>, timer: Rc<RefCell<TIMER>>) -> Self {
         CPU {
             a: 0,
             b: 0,
@@ -74,16 +77,16 @@ impl CPU {
 
     pub fn tick(&mut self) {
         self.handle_interrupts();
-        let opcode = self.mmu.fetch_instruction(self.pc);
+        let opcode = self.mmu.borrow().fetch_instruction(self.pc);
         self.execute(opcode);
     }
 
-    fn execute(&mut self, opcode: u8) {
+    pub fn execute(&mut self, opcode: u8) {
         if opcode != 0xCB {
             self.execute_not_prefixed_instruction(opcode);
         } else {
             self.pc += 1;
-            let new_opcode = self.mmu.fetch_instruction(self.pc);
+            let new_opcode = self.mmu.borrow().fetch_instruction(self.pc);
             self.execute_prefixed_instruction(new_opcode);
         }
     }
