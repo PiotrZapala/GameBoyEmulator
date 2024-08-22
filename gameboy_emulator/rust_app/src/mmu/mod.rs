@@ -1,22 +1,26 @@
+mod mbc;
+
+use mbc::MBC;
+use crate::cartridge::CARTRIDGE;
+
 pub struct MMU {
-    pub ram: [u8; 8192],   // Internal RAM (0xC000 - 0xDFFF)
+    mbc: Box<dyn MBC>,
+    pub wram: [u8; 8192],  // Internal RAM (0xC000 - 0xDFFF)
     pub vram: [u8; 8192],  // Video RAM (0x8000 - 0x9FFF)
     pub hram: [u8; 127],   // High RAM (0xFF80 - 0xFFFE)
-    pub rom: [u8; 32768],  // ROM (0x0000 - 0x7FFF)
-    pub sram: [u8; 8192],  // External RAM (0xA000 - 0xBFFF)
     pub oam: [u8; 160],    // Object Attribute Memory (0xFE00 - 0xFE9F)
     pub io: [u8; 128],     // I/O Registers (0xFF00 - 0xFF7F)
     pub ie: u8,            // Interrupt Enable Register
 }
 
 impl MMU {
-    pub fn new() -> Self {
+    pub fn new(cartridge: CARTRIDGE) -> Self {
+        let mbc = mbc::create_mbc(cartridge);
         MMU {
-            ram: [0; 8192],
+            mbc,
+            wram: [0; 8192],
             vram: [0; 8192],
             hram: [0; 127],
-            rom: [0; 32768],
-            sram: [0; 8192],
             oam: [0; 160],
             io: [0; 128],
             ie: 0,
@@ -37,27 +41,28 @@ impl MMU {
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0x0000..=0x7FFF => self.rom[address as usize],           // ROM
-            0x8000..=0x9FFF => self.vram[address as usize - 0x8000], // VRAM
-            0xA000..=0xBFFF => self.sram[address as usize - 0xA000], // External RAM (SRAM)
-            0xC000..=0xDFFF => self.ram[address as usize - 0xC000],  // Internal RAM (IRAM)
-            0xFE00..=0xFE9F => self.oam[address as usize - 0xFE00],  // OAM
-            0xFF00..=0xFF7F => self.io[address as usize - 0xFF00],   // I/O Registers
-            0xFF80..=0xFFFE => self.hram[address as usize - 0xFF80], // High RAM (HRAM)
-            0xFFFF => self.ie,                                       // Interrupt Enable Register
+            0x0000..=0x7FFF => self.mbc.read_byte(address),
+            0x8000..=0x9FFF => self.vram[address as usize - 0x8000],
+            0xA000..=0xBFFF => self.mbc.read_byte(address),
+            0xC000..=0xDFFF => self.wram[address as usize - 0xC000],
+            0xFE00..=0xFE9F => self.oam[address as usize - 0xFE00],
+            0xFF00..=0xFF7F => self.io[address as usize - 0xFF00],
+            0xFF80..=0xFFFE => self.hram[address as usize - 0xFF80],
+            0xFFFF => self.ie,
             _ => panic!("Attempted to read from an invalid memory address: {:04X}", address),
         }
     }
 
     pub fn write_byte(&mut self, address: u16, value: u8) {
         match address {
-            0x8000..=0x9FFF => self.vram[address as usize - 0x8000] = value, // VRAM
-            0xA000..=0xBFFF => self.sram[address as usize - 0xA000] = value, // External RAM (SRAM)
-            0xC000..=0xDFFF => self.ram[address as usize - 0xC000] = value,  // Internal RAM (IRAM)
-            0xFE00..=0xFE9F => self.oam[address as usize - 0xFE00] = value,  // OAM
-            0xFF00..=0xFF7F => self.io[address as usize - 0xFF00] = value,   // I/O Registers
-            0xFF80..=0xFFFE => self.hram[address as usize - 0xFF80] = value, // High RAM (HRAM)
-            0xFFFF => self.ie = value,                                       // Interrupt Enable Register
+            0x0000..=0x7FFF => self.mbc.write_byte(address, value),
+            0x8000..=0x9FFF => self.vram[address as usize - 0x8000] = value,
+            0xA000..=0xBFFF => self.mbc.write_byte(address, value),
+            0xC000..=0xDFFF => self.wram[address as usize - 0xC000] = value,
+            0xFE00..=0xFE9F => self.oam[address as usize - 0xFE00] = value,
+            0xFF00..=0xFF7F => self.io[address as usize - 0xFF00] = value,
+            0xFF80..=0xFFFE => self.hram[address as usize - 0xFF80] = value,
+            0xFFFF => self.ie = value,
             _ => panic!("Attempted to write to an invalid memory address: {:04X}", address),
         }
     }
