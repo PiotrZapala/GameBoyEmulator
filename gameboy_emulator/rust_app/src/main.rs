@@ -1,26 +1,25 @@
 mod cpu;
 mod mmu;
 mod timer;
+mod utils;
+mod cartridge;
 
 use cpu::CPU;
 use mmu::MMU;
 use timer::TIMER;
+use cartridge::CARTRIDGE;
 
 fn main() {
-    let mut mmu = MMU::new();
-    let mut timer = TIMER::new();
-    mmu.rom[0] = 0x27;
-    let mut cpu = CPU::new(mmu, timer);
-    cpu.a = 0x5D;
-
-    loop {
-        let opcode = cpu.mmu.fetch_instruction(cpu.pc);
-        cpu.tick(opcode);
-
-        if cpu.pc == 1 {
-            break;
+    let data = match utils::load_cartridge_from_file("src/Tetris.gb") {
+        Ok(data) => data,
+        Err(e) => {
+            eprintln!("Failed to load cartridge: {}", e);
+            return;
         }
-    }
-    
-    println!("{:X}", cpu.a);
+    };
+    let cartridge = CARTRIDGE::new(data);
+    println!("{}", cartridge.decode_title());
+    let mut mmu = MMU::new(cartridge);
+    let mut timer = TIMER::new();
+    let mut cpu = CPU::new(mmu, timer);
 }

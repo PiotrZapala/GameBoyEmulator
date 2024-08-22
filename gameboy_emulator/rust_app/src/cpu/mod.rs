@@ -1378,31 +1378,25 @@ impl CPU {
                     0 => {
                         println!("NOP");
                     },
-                    1 => {
-                        println!("LD (nn), SP");
+                    1 => {// LD (nn), SP
                         self.ld_m_u16_sp();
                     },
                     2 => {
                         println!("STOP");
                     },
-                    3 => {
-                        println!("JR d");
+                    3 => {// JR d
                         self.jr_i8();
                     },
-                    4 => {
-                        println!("JR NZ, d");
+                    4 => {// JR NZ, d
                         self.jr_nz_i8();
                     },
-                    5 => {
-                        println!("JR Z, d");
+                    5 => {// JR Z, d
                         self.jr_z_i8();
                     },
-                    6 => {
-                        println!("JR NC, d");
+                    6 => {// JR NC, d
                         self.jr_nc_i8();
                     },
-                    7 => {
-                        println!("JR C, d");
+                    7 => {// JR C, d
                         self.jr_c_i8();
                     },
                     _ => unreachable!(),
@@ -1410,42 +1404,34 @@ impl CPU {
             },
             1 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD BC, nn");
+                    0 => {// LD BC, nn
                         self.ld_bc_u16();
                     },
-                    1 => {
-                        println!("ADD HL, BC");
+                    1 => {// ADD HL, BC
                         let register_b = self.b;
                         let register_c = self.c;
                         self.add_hl_r_u16(register_b, register_c);
                     },
-                    2 => {
-                        println!("LD DE, nn");
+                    2 => {// LD DE, nn
                         self.ld_de_u16();
                     },
-                    3 => {
-                        println!("ADD HL, DE");
+                    3 => {// ADD HL, DE
                         let register_d = self.d;
                         let register_e = self.e;
                         self.add_hl_r_u16(register_d, register_e);
                     },
-                    4 => {
-                        println!("LD HL, nn");
+                    4 => {// LD HL, nn
                         self.ld_hl_u16();
                     },
-                    5 => {
-                        println!("ADD HL, HL");
+                    5 => {// ADD HL, HL
                         let register_h = self.h;
                         let register_l = self.l;
                         self.add_hl_r_u16(register_h, register_l);
                     },
-                    6 => {
-                        println!("LD SP, nn");
+                    6 => {// LD SP, nn
                         self.ld_sp_u16();
                     },
-                    7 => {
-                        println!("ADD HL, SP");
+                    7 => {// ADD HL, SP
                         self.add_hl_sp();
                     },
                     _ => unreachable!(),
@@ -1453,44 +1439,36 @@ impl CPU {
             },
             2 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD (BC), A");
+                    0 => {// LD (BC), A
                         let register_b = self.b;
                         let register_c = self.c;
                         self.ld_m_r_u16_a(register_b, register_c);
                     },
-                    1 => {
-                        println!("LD A, (BC)");
+                    1 => {// LD A, (BC)
                         let register_b = self.b;
                         let register_c = self.c;
                         self.ld_a_m_r_u16(register_b, register_c);
                     },
-                    2 => {
-                        println!("LD (DE), A");
+                    2 => {// LD (DE), A
                         let register_d = self.d;
                         let register_e = self.e;
                         self.ld_m_r_u16_a(register_d, register_e);
                     },
-                    3 => {
-                        println!("LD A, (DE)");
+                    3 => {// LD A, (DE)
                         let register_d = self.d;
                         let register_e = self.e;
                         self.ld_a_m_r_u16(register_d, register_e);
                     },
-                    4 => {
-                        println!("LD (HL+), A");
+                    4 => {// LD (HL+), A
                         self.ld_hl_inc_a();
                     },
-                    5 => {
-                        println!("LD A, (HL+)");
+                    5 => {// LD A, (HL+)
                         self.ld_a_hl_inc();
                     },
-                    6 => {
-                        println!("LD (HL-), A");
+                    6 => {// LD (HL-), A
                         self.ld_hl_dec_a();
                     },
-                    7 => {
-                        println!("LD A, (HL-)");
+                    7 => {// LD A, (HL-)
                         self.ld_a_hl_dec();
                     },
                     _ => unreachable!(),
@@ -1498,48 +1476,40 @@ impl CPU {
             },
             3 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("INC BC");
+                    0 => {// INC BC
                         let register_b = self.b;
                         let register_c = self.c;
                         (self.b, self.c) = self.inc_r_u16(register_b, register_c);
                     },
-                    1 => {
-                        println!("DEC BC");
+                    1 => {// DEC BC
                         let register_b = self.b;
                         let register_c = self.c;
                         (self.b, self.c) = self.dec_r_u16(register_b, register_c);
                     },
-                    2 => {
-                        println!("INC DE");
+                    2 => {// INC DE
                         let register_d = self.d;
                         let register_e = self.e;
                         (self.d, self.e) = self.inc_r_u16(register_d, register_e);
                     },
-                    3 => {
-                        println!("DEC DE");
+                    3 => {// DEC DE
                         let register_d = self.d;
                         let register_e = self.e;
                         (self.d, self.e) = self.dec_r_u16(register_d, register_e);
                     },
-                    4 => {
-                        println!("INC HL");
+                    4 => {// INC HL
                         let register_h = self.h;
                         let register_l = self.l;
                         (self.h, self.l) = self.inc_r_u16(register_h, register_l);
                     },
-                    5 => {
-                        println!("DEC HL");
+                    5 => {// DEC HL
                         let register_h = self.h;
                         let register_l = self.l;
                         (self.h, self.l) = self.dec_r_u16(register_h, register_l);
                     },
-                    6 => {
-                        println!("INC SP");
+                    6 => {// INC SP
                         self.inc_sp();
                     },
-                    7 => {
-                        println!("DEC SP");
+                    7 => {// DEC SP
                         self.dec_sp();
                     },
                     _ => unreachable!(),
@@ -1547,42 +1517,34 @@ impl CPU {
             },
             4 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("INC B");
+                    0 => {// INC B
                         let register_b = self.b;
                         self.b = self.inc_r_u8(register_b);
                     },
-                    1 => {
-                        println!("INC C");
+                    1 => {// INC C
                         let register_c = self.c;
                         self.c = self.inc_r_u8(register_c);
                     },
-                    2 => {
-                        println!("INC D");
+                    2 => {// INC D
                         let register_d = self.d;
                         self.d = self.inc_r_u8(register_d);
                     },
-                    3 => {
-                        println!("INC E");
+                    3 => {// INC E
                         let register_e = self.e;
                         self.e = self.inc_r_u8(register_e);
                     },
-                    4 => {
-                        println!("INC H");
+                    4 => {// INC H
                         let register_h = self.h;
                         self.h = self.inc_r_u8(register_h);
                     },
-                    5 => {
-                        println!("INC L");
+                    5 => {// INC L
                         let register_l = self.l;
                         self.l = self.inc_r_u8(register_l);
                     },
-                    6 => {
-                        println!("INC (HL)");
+                    6 => {// INC (HL)
                         self.inc_m_hl();
                     },
-                    7 => {
-                        println!("INC A");
+                    7 => {// INC A
                         let register_a = self.a;
                         self.a = self.inc_r_u8(register_a);
                     },
@@ -1591,42 +1553,34 @@ impl CPU {
             },
             5 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("DEC B");
+                    0 => {// DEC B
                         let register_b = self.b;
                         self.b = self.dec_r_u8(register_b);
                     },
-                    1 => {
-                        println!("DEC C");
+                    1 => {// DEC C
                         let register_c = self.c;
                         self.c = self.dec_r_u8(register_c);
                     },
-                    2 => {
-                        println!("DEC D");
+                    2 => {// DEC D
                         let register_d = self.d;
                         self.d = self.dec_r_u8(register_d);
                     },
-                    3 => {
-                        println!("DEC E");
+                    3 => {// DEC E
                         let register_e = self.e;
                         self.e = self.dec_r_u8(register_e);
                     },
-                    4 => {
-                        println!("DEC H");
+                    4 => {// DEC H
                         let register_h = self.h;
                         self.h = self.dec_r_u8(register_h);
                     },
-                    5 => {
-                        println!("DEC L");
+                    5 => {// DEC L
                         let register_l = self.l;
                         self.l = self.dec_r_u8(register_l);
                     },
-                    6 => {
-                        println!("DEC (HL)");
+                    6 => {// DEC (HL)
                         self.dec_m_hl();
                     },
-                    7 => {
-                        println!("DEC A");
+                    7 => {// DEC A
                         let register_a = self.a;
                         self.a = self.dec_r_u8(register_a);
                     },
@@ -1635,36 +1589,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, n");
+                    0 => {// LD B, n
                         self.ld_b_u8();
                     },
-                    1 => {
-                        println!("LD C, n");
+                    1 => {// LD C, n
                         self.ld_c_u8();
                     },
-                    2 => {
-                        println!("LD D, n");
+                    2 => {// LD D, n
                         self.ld_d_u8();
                     },
-                    3 => {
-                        println!("LD E, n");
+                    3 => {// LD E, n
                         self.ld_e_u8();
                     },
-                    4 => {
-                        println!("LD H, n");
+                    4 => {// LD H, n
                         self.ld_h_u8();
                     },
-                    5 => {
-                        println!("LD L, n");
+                    5 => {// LD L, n
                         self.ld_l_u8();
                     },
-                    6 => {
-                        println!("LD (HL), n");
+                    6 => {// LD (HL), n
                         self.ld_m_hl_u8();
                     },
-                    7 => {
-                        println!("LD A, n");
+                    7 => {// LD A, n
                         self.ld_a_u8();
                     },
                     _ => unreachable!(),
@@ -1672,36 +1618,28 @@ impl CPU {
             },
             7 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLCA");
+                    0 => {// RLCA
                         self.rlca();
                     },
-                    1 => {
-                        println!("RRCA");
+                    1 => {// RRCA
                         self.rrca();
                     },
-                    2 => {
-                        println!("RLA");
+                    2 => {// RLA
                         self.rla();
                     },
-                    3 => {
-                        println!("RRA");
+                    3 => {// RRA
                         self.rra();
                     },
-                    4 => {
-                        println!("DAA");
+                    4 => {// DAA
                         self.daa();
                     },
-                    5 => {
-                        println!("CPL");
+                    5 => {// CPL
                         self.cpl();
                     },
-                    6 => {
-                        println!("SCF");
+                    6 => {// SCF
                         self.scf();
                     },
-                    7 => {
-                        println!("CCF");
+                    7 => {// CCF
                         self.ccf();
                     },
                     _ => unreachable!(),
@@ -1720,36 +1658,28 @@ impl CPU {
             0 => {
                 let register_b = self.b;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, B");
+                    0 => {// LD B, B
                         self.ld_b_r_u8(register_b);
                     },
-                    1 => {
-                        println!("LD C, B");
+                    1 => {// LD C, B
                         self.ld_c_r_u8(register_b);
                     },
-                    2 => {
-                        println!("LD D, B");
+                    2 => {// LD D, B
                         self.ld_d_r_u8(register_b);
                     },
-                    3 => {
-                        println!("LD E, B");
+                    3 => {// LD E, B
                         self.ld_e_r_u8(register_b);
                     },
-                    4 => {
-                        println!("LD H, B");
+                    4 => {// LD H, B
                         self.ld_h_r_u8(register_b);
                     },
-                    5 => {
-                        println!("LD L, B");
+                    5 => {// LD L, B
                         self.ld_l_r_u8(register_b);
                     },
-                    6 => {
-                        println!("LD (HL), B");
+                    6 => {// LD (HL), B
                         self.ld_m_hl_r_u8(register_b);
                     },
-                    7 => {
-                        println!("LD A, B");
+                    7 => {// LD A, B
                         self.ld_a_r_u8(register_b);
                     },
                     _ => unreachable!(),
@@ -1758,36 +1688,28 @@ impl CPU {
             1 => {
                 let register_c = self.c;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, C");
+                    0 => {// LD B, C
                         self.ld_b_r_u8(register_c);
                     },
-                    1 => {
-                        println!("LD C, C");
+                    1 => {// LD C, C
                         self.ld_c_r_u8(register_c);
                     },
-                    2 => {
-                        println!("LD D, C");
+                    2 => {// LD D, C
                         self.ld_d_r_u8(register_c);
                     },
-                    3 => {
-                        println!("LD E, C");
+                    3 => {// LD E, C
                         self.ld_e_r_u8(register_c);
                     },
-                    4 => {
-                        println!("LD H, C");
+                    4 => {// LD H, C
                         self.ld_h_r_u8(register_c);
                     },
-                    5 => {
-                        println!("LD L, C");
+                    5 => {// LD L, C
                         self.ld_l_r_u8(register_c);
                     },
-                    6 => {
-                        println!("LD (HL), C");
+                    6 => {// LD (HL), C
                         self.ld_m_hl_r_u8(register_c);
                     },
-                    7 => {
-                        println!("LD A, C");
+                    7 => {// LD A, C
                         self.ld_a_r_u8(register_c);
                     },
                     _ => unreachable!(),
@@ -1796,36 +1718,28 @@ impl CPU {
             2 => {
                 let register_d = self.d;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, D");
+                    0 => {// LD B, D
                         self.ld_b_r_u8(register_d);
                     },
-                    1 => {
-                        println!("LD C, D");
+                    1 => {// LD C, D
                         self.ld_c_r_u8(register_d);
                     },
-                    2 => {
-                        println!("LD D, D");
+                    2 => {// LD D, D
                         self.ld_d_r_u8(register_d);
                     },
-                    3 => {
-                        println!("LD E, D");
+                    3 => {// LD E, D
                         self.ld_e_r_u8(register_d);
                     },
-                    4 => {
-                        println!("LD H, D");
+                    4 => {// LD H, D
                         self.ld_h_r_u8(register_d);
                     },
-                    5 => {
-                        println!("LD L, D");
+                    5 => {// LD L, D
                         self.ld_l_r_u8(register_d);
                     },
-                    6 => {
-                        println!("LD (HL), D");
+                    6 => {// LD (HL), D
                         self.ld_m_hl_r_u8(register_d);
                     },
-                    7 => {
-                        println!("LD A, D");
+                    7 => {// LD A, D
                         self.ld_a_r_u8(register_d);
                     },
                     _ => unreachable!(),
@@ -1834,36 +1748,28 @@ impl CPU {
             3 => {
                 let register_e = self.e;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, E");
+                    0 => {// LD B, E
                         self.ld_b_r_u8(register_e);
                     },
-                    1 => {
-                        println!("LD C, E");
+                    1 => {// LD C, E
                         self.ld_c_r_u8(register_e);
                     },
-                    2 => {
-                        println!("LD D, E");
+                    2 => {// LD D, E
                         self.ld_d_r_u8(register_e);
                     },
-                    3 => {
-                        println!("LD E, E");
+                    3 => {// LD E, E
                         self.ld_e_r_u8(register_e);
                     },
-                    4 => {
-                        println!("LD H, E");
+                    4 => {// LD H, E
                         self.ld_h_r_u8(register_e);
                     },
-                    5 => {
-                        println!("LD L, E");
+                    5 => {// LD L, E
                         self.ld_l_r_u8(register_e);
                     },
-                    6 => {
-                        println!("LD (HL), E");
+                    6 => {// LD (HL), E
                         self.ld_m_hl_r_u8(register_e);
                     },
-                    7 => {
-                        println!("LD A, E");
+                    7 => {// LD A, E
                         self.ld_a_r_u8(register_e);
                     },
                     _ => unreachable!(),
@@ -1872,36 +1778,28 @@ impl CPU {
             4 => {
                 let register_h = self.h;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, H");
+                    0 => {// LD B, H
                         self.ld_b_r_u8(register_h);
                     },
-                    1 => {
-                        println!("LD C, H");
+                    1 => {// LD C, H
                         self.ld_c_r_u8(register_h);
                     },
-                    2 => {
-                        println!("LD D, H");
+                    2 => {// LD D, H
                         self.ld_d_r_u8(register_h);
                     },
-                    3 => {
-                        println!("LD E, H");
+                    3 => {// LD E, H
                         self.ld_e_r_u8(register_h);
                     },
-                    4 => {
-                        println!("LD H, H");
+                    4 => {// LD H, H
                         self.ld_h_r_u8(register_h);
                     },
-                    5 => {
-                        println!("LD L, H");
+                    5 => {// LD L, H
                         self.ld_l_r_u8(register_h);
                     },
-                    6 => {
-                        println!("LD (HL), H");
+                    6 => {// LD (HL), H
                         self.ld_m_hl_r_u8(register_h);
                     },
-                    7 => {
-                        println!("LD A, H");
+                    7 => {// LD A, H
                         self.ld_a_r_u8(register_h);
                     },
                     _ => unreachable!(),
@@ -1910,36 +1808,28 @@ impl CPU {
             5 => {
                 let register_l = self.l;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, L");
+                    0 => {// LD B, L
                         self.ld_b_r_u8(register_l);
                     },
-                    1 => {
-                        println!("LD C, L");
+                    1 => {// LD C, L
                         self.ld_c_r_u8(register_l);
                     },
-                    2 => {
-                        println!("LD D, L");
+                    2 => {// LD D, L
                         self.ld_d_r_u8(register_l);
                     },
-                    3 => {
-                        println!("LD E, L");
+                    3 => {// LD E, L
                         self.ld_e_r_u8(register_l);
                     },
-                    4 => {
-                        println!("LD H, L");
+                    4 => {// LD H, L
                         self.ld_h_r_u8(register_l);
                     },
-                    5 => {
-                        println!("LD L, L");
+                    5 => {// LD L, L
                         self.ld_l_r_u8(register_l);
                     },
-                    6 => {
-                        println!("LD (HL), L");
+                    6 => {// LD (HL), L
                         self.ld_m_hl_r_u8(register_l);
                     },
-                    7 => {
-                        println!("LD A, L");
+                    7 => {// LD A, L
                         self.ld_a_r_u8(register_l);
                     },
                     _ => unreachable!(),
@@ -1947,35 +1837,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, (HL)");
+                    0 => {// LD B, (HL)
                         self.b = self.ld_r_u8_m_hl();
                     },
-                    1 => {
-                        println!("LD C, (HL)");
+                    1 => {// LD C, (HL)
                         self.c = self.ld_r_u8_m_hl();
                     },
-                    2 => {
-                        println!("LD D, (HL)");
+                    2 => {// LD D, (HL)
                         self.d = self.ld_r_u8_m_hl();
                     },
-                    3 => {
-                        println!("LD E, (HL)");
+                    3 => {// LD E, (HL)
                         self.e = self.ld_r_u8_m_hl();
                     },
-                    4 => {
-                        println!("LD H, (HL)");
+                    4 => {// LD H, (HL)
                         self.h = self.ld_r_u8_m_hl();
                     },
-                    5 => {
-                        println!("LD L, (HL)");
+                    5 => {// LD L, (HL)
                         self.l = self.ld_r_u8_m_hl();
                     },
                     6 => {
                         println!("HALT");
                     },
-                    7 => {
-                        println!("LD A, (HL)");
+                    7 => {// LD A, (HL)
                         self.a = self.ld_r_u8_m_hl();
                     },
                     _ => unreachable!(),
@@ -1984,36 +1867,28 @@ impl CPU {
             7 => {
                 let register_a = self.a;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("LD B, A");
+                    0 => {// LD B, A
                         self.ld_b_r_u8(register_a);
                     },
-                    1 => {
-                        println!("LD C, A");
+                    1 => {// LD C, A
                         self.ld_c_r_u8(register_a);
                     },
-                    2 => {
-                        println!("LD D, A");
+                    2 => {// LD D, A
                         self.ld_d_r_u8(register_a);
                     },
-                    3 => {
-                        println!("LD E, A");
+                    3 => {// LD E, A
                         self.ld_e_r_u8(register_a);
                     },
-                    4 => {
-                        println!("LD H, A");
+                    4 => {// LD H, A
                         self.ld_h_r_u8(register_a);
                     },
-                    5 => {
-                        println!("LD L, A");
+                    5 => {// LD L, A
                         self.ld_l_r_u8(register_a);
                     },
-                    6 => {
-                        println!("LD (HL), A");
+                    6 => {// LD (HL), A
                         self.ld_m_hl_r_u8(register_a);
                     },
-                    7 => {
-                        println!("LD A, A");
+                    7 => {// LD A, A
                         self.ld_a_r_u8(register_a);
                     },
                     _ => unreachable!(),
@@ -2032,36 +1907,28 @@ impl CPU {
             0 => {
                 let register_b = self.b;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, B");
+                    0 => {// ADD A, B
                         self.add_a_r_u8(register_b);
                     },
-                    1 => {
-                        println!("ADC A, B");
+                    1 => {// ADC A, B
                         self.adc_a_r_u8(register_b);
                     },
-                    2 => {
-                        println!("SUB A, B");
+                    2 => {// SUB A, B
                         self.sub_a_r_u8(register_b);
                     },
-                    3 => {
-                        println!("SBC A, B");
+                    3 => {// SBC A, B
                         self.sbc_a_r_u8(register_b);
                     },
-                    4 => {
-                        println!("AND A, B");
+                    4 => {// AND A, B
                         self.and_a_r_u8(register_b);
                     },
-                    5 => {
-                        println!("XOR A, B");
+                    5 => {// XOR A, B
                         self.xor_a_r_u8(register_b);
                     },
-                    6 => {
-                        println!("OR A, B");
+                    6 => {// OR A, B
                         self.or_a_r_u8(register_b);
                     },
-                    7 => {
-                        println!("CP A, B");
+                    7 => {// CP A, B
                         self.cp_a_r_u8(register_b);
                     },
                     _ => unreachable!(),
@@ -2070,36 +1937,28 @@ impl CPU {
             1 => {
                 let register_c = self.c;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, C");
+                    0 => {// ADD A, C
                         self.add_a_r_u8(register_c);
                     },
-                    1 => {
-                        println!("ADC A, C");                        
+                    1 => {// ADC A, C                       
                         self.adc_a_r_u8(register_c);
                     },
-                    2 => {
-                        println!("SUB A, C");                        
+                    2 => {// SUB A, C                      
                         self.sub_a_r_u8(register_c);
                     },
-                    3 => {
-                        println!("SBC A, C");                        
+                    3 => {// SBC A, C                        
                         self.sbc_a_r_u8(register_c);
                     },
-                    4 => {
-                        println!("AND A, C");                        
+                    4 => {// AND A, C                  
                         self.and_a_r_u8(register_c);
                     },
-                    5 => {
-                        println!("XOR A, C");                        
+                    5 => {// XOR A, C                        
                         self.xor_a_r_u8(register_c);
                     },
-                    6 => {
-                        println!("OR A, C");                        
+                    6 => {// OR A, C                      
                         self.or_a_r_u8(register_c);
                     },
-                    7 => {
-                        println!("CP A, C");                        
+                    7 => {// CP A, C                       
                         self.cp_a_r_u8(register_c);
                     },
                     _ => unreachable!(),
@@ -2108,36 +1967,28 @@ impl CPU {
             2 => {
                 let register_d = self.d;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, D");
+                    0 => {// ADD A, D
                         self.add_a_r_u8(register_d);
                     },
-                    1 => {
-                        println!("ADC A, D");
+                    1 => {// ADC A, D
                         self.adc_a_r_u8(register_d);
                     },
-                    2 => {
-                        println!("SUB A, D");
+                    2 => {// SUB A, D
                         self.sub_a_r_u8(register_d);
                     },
-                    3 => {
-                        println!("SBC A, D");
+                    3 => {// SBC A, D
                         self.sbc_a_r_u8(register_d);
                     },
-                    4 => {
-                        println!("AND A, D");
+                    4 => {// AND A, D
                         self.and_a_r_u8(register_d);
                     },
-                    5 => {
-                        println!("XOR A, D");
+                    5 => {// XOR A, D
                         self.xor_a_r_u8(register_d);
                     },
-                    6 => {
-                        println!("OR A, D");
+                    6 => {// OR A, D
                         self.or_a_r_u8(register_d);
                     },
-                    7 => {
-                        println!("CP A, D");
+                    7 => {// CP A, D
                         self.cp_a_r_u8(register_d);
                     },
                     _ => unreachable!(),
@@ -2146,36 +1997,28 @@ impl CPU {
             3 => {
                 let register_e = self.e;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, E");
+                    0 => {// ADD A, E
                         self.add_a_r_u8(register_e);
                     },
-                    1 => {
-                        println!("ADC A, E");
+                    1 => {// ADC A, E
                         self.adc_a_r_u8(register_e);
                     },
-                    2 => {
-                        println!("SUB A, E");
+                    2 => {// SUB A, E
                         self.sub_a_r_u8(register_e);
                     },
-                    3 => {
-                        println!("SBC A, E");
+                    3 => {// SBC A, E
                         self.sbc_a_r_u8(register_e);
                     },
-                    4 => {
-                        println!("AND A, E");
+                    4 => {// AND A, E
                         self.and_a_r_u8(register_e);
                     },
-                    5 => {
-                        println!("XOR A, E");
+                    5 => {// XOR A, E
                         self.xor_a_r_u8(register_e);
                     },
-                    6 => {
-                        println!("OR A, E");
+                    6 => {// OR A, E
                         self.or_a_r_u8(register_e);
                     },
-                    7 => {
-                        println!("CP A, E");
+                    7 => {// CP A, E
                         self.cp_a_r_u8(register_e);
                     },
                     _ => unreachable!(),
@@ -2184,36 +2027,28 @@ impl CPU {
             4 => {
                 let register_h = self.h;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, H");
+                    0 => {// ADD A, H
                         self.add_a_r_u8(register_h);
                     },
-                    1 => {
-                        println!("ADC A, H");
+                    1 => {// ADC A, H
                         self.adc_a_r_u8(register_h);
                     },
-                    2 => {
-                        println!("SUB A, H");
+                    2 => {// SUB A, H
                         self.sub_a_r_u8(register_h);
                     },
-                    3 => {
-                        println!("SBC A, H");
+                    3 => {// SBC A, H
                         self.sbc_a_r_u8(register_h);
                     },
-                    4 => {
-                        println!("AND A, H");
+                    4 => {// AND A, H
                         self.and_a_r_u8(register_h);
                     },
-                    5 => {
-                        println!("XOR A, H");
+                    5 => {// XOR A, H
                         self.xor_a_r_u8(register_h);
                     },
-                    6 => {
-                        println!("OR A, H");
+                    6 => {// OR A, H
                         self.or_a_r_u8(register_h);
                     },
-                    7 => {
-                        println!("CP A, H");
+                    7 => {// CP A, H
                         self.cp_a_r_u8(register_h);
                     },
                     _ => unreachable!(),
@@ -2222,36 +2057,28 @@ impl CPU {
             5 => {
                 let register_l = self.l;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, L");
+                    0 => {// ADD A, L
                         self.add_a_r_u8(register_l);
                     },
-                    1 => {
-                        println!("ADC A, L");
+                    1 => {// ADC A, L
                         self.adc_a_r_u8(register_l);
                     },
-                    2 => {
-                        println!("SUB A, L");
+                    2 => {// SUB A, L
                         self.sub_a_r_u8(register_l);
                     },
-                    3 => {
-                        println!("SBC A, L");
+                    3 => {// SBC A, L
                         self.sbc_a_r_u8(register_l);
                     },
-                    4 => {
-                        println!("AND A, L");
+                    4 => {// AND A, L
                         self.and_a_r_u8(register_l);
                     },
-                    5 => {
-                        println!("XOR A, L");
+                    5 => {// XOR A, L
                         self.xor_a_r_u8(register_l);
                     },
-                    6 => {
-                        println!("OR A, L");
+                    6 => {// OR A, L
                         self.or_a_r_u8(register_l);
                     },
-                    7 => {
-                        println!("CP A, L");
+                    7 => {// CP A, L
                         self.cp_a_r_u8(register_l);
                     },
                     _ => unreachable!(),
@@ -2259,36 +2086,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, (HL)");
+                    0 => {// ADD A, (HL)
                         self.add_a_m_hl();
                     },
-                    1 => {
-                        println!("ADC A, (HL)");
+                    1 => {// ADC A, (HL)
                         self.adc_a_m_hl();
                     },
-                    2 => {
-                        println!("SUB A, (HL)");
+                    2 => {// SUB A, (HL)
                         self.sub_a_m_hl();
                     },
-                    3 => {
-                        println!("SBC A, (HL)");
+                    3 => {// SBC A, (HL)
                         self.sbc_a_m_hl();
                     },
-                    4 => {
-                        println!("AND A, (HL)");
+                    4 => {// AND A, (HL)
                         self.and_a_m_hl();
                     },
-                    5 => {
-                        println!("XOR A, (HL)");
+                    5 => {// XOR A, (HL)
                         self.xor_a_m_hl();
                     },
-                    6 => {
-                        println!("OR A, (HL)");
+                    6 => {// OR A, (HL)
                         self.or_a_m_hl();
                     },
-                    7 => {
-                        println!("CP A, (HL)");
+                    7 => {// CP A, (HL)
                         self.cp_a_m_hl();
                     },
                     _ => unreachable!(),
@@ -2297,36 +2116,28 @@ impl CPU {
             7 => {
                 let register_a = self.a;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, A");
+                    0 => {// ADD A, A
                         self.add_a_r_u8(register_a);
                     },
-                    1 => {
-                        println!("ADC A, A");
+                    1 => {// ADC A, A
                         self.adc_a_r_u8(register_a);
                     },
-                    2 => {
-                        println!("SUB A, A");
+                    2 => {// SUB A, A
                         self.sub_a_r_u8(register_a);
                     },
-                    3 => {
-                        println!("SBC A, A");
+                    3 => {// SBC A, A
                         self.sbc_a_r_u8(register_a);
                     },
-                    4 => {
-                        println!("AND A, A");
+                    4 => {// AND A, A
                         self.and_a_r_u8(register_a);
                     },
-                    5 => {
-                        println!("XOR A, A");
+                    5 => {// XOR A, A
                         self.xor_a_r_u8(register_a);
                     },
-                    6 => {
-                        println!("OR A, A");
+                    6 => {// OR A, A
                         self.or_a_r_u8(register_a);
                     },
-                    7 => {
-                        println!("CP A, A");
+                    7 => {// CP A, A
                         self.cp_a_r_u8(register_a);
                     },
                     _ => unreachable!(),
@@ -2344,36 +2155,28 @@ impl CPU {
         match bits_2_1_0 {
             0 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RET NZ");
+                    0 => {// RET NZ
                         self.ret_nz();
                     },
-                    1 => {
-                        println!("RET Z");
+                    1 => {// RET Z
                         self.ret_z();
                     },
-                    2 => {
-                        println!("RET NC");
+                    2 => {// RET NC
                         self.ret_nc();
                     },
-                    3 => {
-                        println!("RET C");
+                    3 => {// RET C
                         self.ret_c();
                     },
-                    4 => {
-                        println!("LD (0xFF00+n), A");
+                    4 => {// LD (0xFF00+n), A
                         self.ld_ff00_plus_u8_a();
                     },
-                    5 => {
-                        println!("ADD SP, d");
+                    5 => {// ADD SP, d
                         self.add_sp_i8();
                     },
-                    6 => {
-                        println!("LD A, (0xFF00+n)");
+                    6 => {// LD A, (0xFF00+n)
                         self.ld_a_ff00_plus_u8();
                     },
-                    7 => {
-                        println!("LD HL, SP+d");
+                    7 => {// LD HL, SP+d
                         self.ld_hl_sp_plus_i8();
                     },
                     _ => unreachable!(),
@@ -2381,35 +2184,27 @@ impl CPU {
             },
             1 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("POP BC");
+                    0 => {// POP BC
                         self.pop_bc();
                     },
-                    1 => {
-                        println!("RET");
+                    1 => {// RET
                         self.ret();
                     },
-                    2 => {
-                        println!("POP DE");
+                    2 => {// POP DE
                         self.pop_de();
                     },
-                    3 => {
-                        println!("RETI");
+                    3 => {// RETI
                     },
-                    4 => {
-                        println!("POP HL");
+                    4 => {// POP HL
                         self.pop_hl();
                     },
-                    5 => {
-                        println!("JP HL");
+                    5 => {// JP HL
                         self.jp_hl();
                     },
-                    6 => {
-                        println!("POP AF");
+                    6 => {// POP AF
                         self.pop_af();
                     },
-                    7 => {
-                        println!("LD SP, HL");
+                    7 => {// LD SP, HL
                         self.ld_sp_hl();
                     },
                     _ => unreachable!(),
@@ -2417,36 +2212,28 @@ impl CPU {
             },
             2 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("JP NZ, nn");
+                    0 => {// JP NZ, nn
                         self.jp_nz_u16();
                     },
-                    1 => {
-                        println!("JP Z, nn");
+                    1 => {// JP Z, nn
                         self.jp_z_u16();
                     },
-                    2 => {
-                        println!("JP NC, nn");
+                    2 => {// JP NC, nn
                         self.jp_nc_u16();
                     },
-                    3 => {
-                        println!("JP C, nn");
+                    3 => {// JP C, nn
                         self.jp_c_u16();
                     },
-                    4 => {
-                        println!("LD (0xFF00+C), A");
+                    4 => {// LD (0xFF00+C), A
                         self.ld_ff00_plus_c_a();
                     },
-                    5 => {
-                        println!("LD (nn), A");
+                    5 => {// LD (nn), A
                         self.ld_u16_a();
                     },
-                    6 => {
-                        println!("LD A, (0xFF00+C)");
+                    6 => {// LD A, (0xFF00+C)
                         self.ld_a_ff00_plus_c();
                     },
-                    7 => {
-                        println!("LD A, (nn)");
+                    7 => {// LD A, (nn)
                         self.ld_a_u16();
                     },
                     _ => unreachable!(),
@@ -2454,12 +2241,8 @@ impl CPU {
             },
             3 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("JP nn");
+                    0 => {// JP nn
                         self.jp_u16();
-                    },
-                    1 => {
-                        println!("PREFIX CB");
                     },
                     6 => {
                         println!("DI");
@@ -2472,20 +2255,16 @@ impl CPU {
             },
             4 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("CALL NZ, nn");
+                    0 => {// CALL NZ, nn
                         self.call_nz_u16();
                     },
-                    1 => {
-                        println!("CALL Z, nn");
+                    1 => {// CALL Z, nn
                         self.call_z_u16();
                     },
-                    2 => {
-                        println!("CALL NC, nn");
+                    2 => {// CALL NC, nn
                         self.call_nc_u16();
                     },
-                    3 => {
-                        println!("CALL C, nn");
+                    3 => {// CALL C, nn
                         self.call_c_u16();
                     },
                     _ => unreachable!(),
@@ -2493,24 +2272,19 @@ impl CPU {
             },
             5 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("PUSH BC");
+                    0 => {// PUSH BC
                         self.push_bc();
                     },
-                    1 => {
-                        println!("CALL nn");
+                    1 => {// CALL nn
                         self.call_u16();
                     },
-                    2 => {
-                        println!("PUSH DE");
+                    2 => {// PUSH DE
                         self.push_de();
                     },
-                    4 => {
-                        println!("PUSH HL");
+                    4 => {// PUSH HL
                         self.push_hl();
                     },
-                    6 => {
-                        println!("PUSH AF");
+                    6 => {// PUSH AF
                         self.push_af();
                     },
                     _ => unreachable!(),
@@ -2518,36 +2292,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("ADD A, n");
+                    0 => {// ADD A, n
                         self.add_a_u8();
                     },
-                    1 => {
-                        println!("ADC A, n");
+                    1 => {// ADC A, n
                         self.adc_a_u8();
                     },
-                    2 => {
-                        println!("SUB A, n");
+                    2 => {// SUB A, n
                         self.sub_a_u8();
                     },
-                    3 => {
-                        println!("SBC A, n");
+                    3 => {// SBC A, n
                         self.sbc_a_u8();
                     },
-                    4 => {
-                        println!("AND A, n");
+                    4 => {// AND A, n
                         self.and_a_u8();
                     },
-                    5 => {
-                        println!("XOR A, n");
+                    5 => {// XOR A, n
                         self.xor_a_u8();
                     },
-                    6 => {
-                        println!("OR A, n");
+                    6 => {// OR A, n
                         self.or_a_u8();
                     },
-                    7 => {
-                        println!("CP A, n");
+                    7 => {// CP A, n
                         self.cp_a_u8();
                     },
                     _ => unreachable!(),
@@ -2555,36 +2321,28 @@ impl CPU {
             },
             7 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RST 00h");
+                    0 => {// RST 00h
                         self.rst(0x0000);
                     },
-                    1 => {
-                        println!("RST 08h");
+                    1 => {// RST 08h
                         self.rst(0x0008);
                     },
-                    2 => {
-                        println!("RST 10h");
+                    2 => {// RST 10h
                         self.rst(0x0010);
                     },
-                    3 => {
-                        println!("RST 18h");
+                    3 => {// RST 18h
                         self.rst(0x0018);
                     },
-                    4 => {
-                        println!("RST 20h");
+                    4 => {// RST 20h
                         self.rst(0x0020);
                     },
-                    5 => {
-                        println!("RST 28h");
+                    5 => {// RST 28h
                         self.rst(0x0028);
                     },
-                    6 => {
-                        println!("RST 30h");
+                    6 => {// RST 30h
                         self.rst(0x0030);
                     },
-                    7 => {
-                        println!("RST 38h");
+                    7 => {// RST 38h
                         self.rst(0x0038);
                     },
                     _ => unreachable!(),
@@ -2603,36 +2361,28 @@ impl CPU {
             0 => {
                 let register_b = self.b;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC B");
+                    0 => {// RLC B
                         self.b = self.rlc(register_b);
                     },
-                    1 => {
-                        println!("RRC B");
+                    1 => {// RRC B
                         self.b = self.rrc(register_b);
                     },
-                    2 => {
-                        println!("RL B");
+                    2 => {// RL B
                         self.b = self.rl(register_b);
                     },
-                    3 => {
-                        println!("RR B");
+                    3 => {// RR B
                         self.b = self.rr(register_b);
                     },
-                    4 => {
-                        println!("SLA B");
+                    4 => {// SLA B
                         self.b = self.sla(register_b);
                     },
-                    5 => {
-                        println!("SRA B");
+                    5 => {// SRA B
                         self.b = self.sra(register_b);
                     },
-                    6 => {
-                        println!("SWAP B");
+                    6 => {// SWAP B
                         self.b = self.swap(register_b);
                     },
-                    7 => {
-                        println!("SRL B");
+                    7 => {// SRL B
                         self.b = self.srl(register_b);
                     },
                     _ => unreachable!(),
@@ -2641,36 +2391,28 @@ impl CPU {
             1 => {
                 let register_c = self.c;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC C");
+                    0 => {// RLC C
                         self.c = self.rlc(register_c);
                     },
-                    1 => {
-                        println!("RRC C");
+                    1 => {// RRC C
                         self.c = self.rrc(register_c);
                     },
-                    2 => {
-                        println!("RL C");
+                    2 => {// RL C
                         self.c = self.rl(register_c);
                     },
-                    3 => {
-                        println!("RR C");
+                    3 => {// RR C
                         self.c = self.rr(register_c);
                     },
-                    4 => {
-                        println!("SLA C");
+                    4 => {// SLA C
                         self.c = self.sla(register_c);
                     },
-                    5 => {
-                        println!("SRA C");
+                    5 => {// SRA C
                         self.c = self.sra(register_c);
                     },
-                    6 => {
-                        println!("SWAP C");
+                    6 => {// SWAP C
                         self.c = self.swap(register_c);
                     },
-                    7 => {
-                        println!("SRL C");
+                    7 => {// SRL C
                         self.c = self.srl(register_c);
                     },
                     _ => unreachable!(),
@@ -2679,36 +2421,28 @@ impl CPU {
             2 => {
                 let register_d = self.d;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC D");
+                    0 => {// RLC D
                         self.d = self.rlc(register_d);
                     },
-                    1 => {
-                        println!("RRC D");
+                    1 => {// RRC D
                         self.d = self.rrc(register_d);
                     },
-                    2 => {
-                        println!("RL D");
+                    2 => {// RL D
                         self.d = self.rl(register_d);
                     },
-                    3 => {
-                        println!("RR D");
+                    3 => {// RR D
                         self.d = self.rr(register_d);
                     },
-                    4 => {
-                        println!("SLA D");
+                    4 => {// SLA D
                         self.d = self.sla(register_d);
                     },
-                    5 => {
-                        println!("SRA D");
+                    5 => {// SRA D
                         self.d = self.sra(register_d);
                     },
-                    6 => {
-                        println!("SWAP D");
+                    6 => {// SWAP D
                         self.d = self.swap(register_d);
                     },
-                    7 => {
-                        println!("SRL D");
+                    7 => {// SRL D
                         self.d = self.srl(register_d);
                     },
                     _ => unreachable!(),
@@ -2717,36 +2451,28 @@ impl CPU {
             3 => {
                 let register_e = self.e;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC E");
+                    0 => {// RLC E
                         self.e = self.rlc(register_e);
                     },
-                    1 => {
-                        println!("RRC E");
+                    1 => {// RRC E
                         self.e = self.rrc(register_e);
                     },
-                    2 => {
-                        println!("RL E");
+                    2 => {// RL E
                         self.e = self.rl(register_e);
                     },
-                    3 => {
-                        println!("RR E");
+                    3 => {// RR E
                         self.e = self.rr(register_e);
                     },
-                    4 => {
-                        println!("SLA E");
+                    4 => {// SLA E
                         self.e = self.sla(register_e);
                     },
-                    5 => {
-                        println!("SRA E");
+                    5 => {// SRA E
                         self.e = self.sra(register_e);
                     },
-                    6 => {
-                        println!("SWAP E");
+                    6 => {// SWAP E
                         self.e = self.swap(register_e);
                     },
-                    7 => {
-                        println!("SRL E");
+                    7 => {// SRL E
                         self.e = self.srl(register_e);
                     },
                     _ => unreachable!(),
@@ -2755,36 +2481,28 @@ impl CPU {
             4 => {
                 let register_h = self.h;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC H");
+                    0 => {// RLC H
                         self.h = self.rlc(register_h);
                     },
-                    1 => {
-                        println!("RRC H");
+                    1 => {// RRC H
                         self.h = self.rrc(register_h);
                     },
-                    2 => {
-                        println!("RL H");
+                    2 => {// RL H
                         self.h = self.rl(register_h);
                     },
-                    3 => {
-                        println!("RR H");
+                    3 => {// RR H
                         self.h = self.rr(register_h);
                     },
-                    4 => {
-                        println!("SLA H");
+                    4 => {// SLA H
                         self.h = self.sla(register_h);
                     },
-                    5 => {
-                        println!("SRA H");
+                    5 => {// SRA H
                         self.h = self.sra(register_h);
                     },
-                    6 => {
-                        println!("SWAP H");
+                    6 => {// SWAP H
                         self.h = self.swap(register_h);
                     },
-                    7 => {
-                        println!("SRL H");
+                    7 => {// SRL H
                         self.h = self.srl(register_h);
                     },
                     _ => unreachable!(),
@@ -2793,36 +2511,28 @@ impl CPU {
             5 => {
                 let register_l = self.l;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC L");
+                    0 => {// RLC L
                         self.l = self.rlc(register_l);
                     },
-                    1 => {
-                        println!("RRC L");
+                    1 => {// RRC L
                         self.l = self.rrc(register_l);
                     },
-                    2 => {
-                        println!("RL L");
+                    2 => {// RL L
                         self.l = self.rl(register_l);
                     },
-                    3 => {
-                        println!("RR L");
+                    3 => {// RR L
                         self.l = self.rr(register_l);
                     },
-                    4 => {
-                        println!("SLA L");
+                    4 => {// SLA L
                         self.l = self.sla(register_l);
                     },
-                    5 => {
-                        println!("SRA L");
+                    5 => {// SRA L
                         self.l = self.sra(register_l);
                     },
-                    6 => {
-                        println!("SWAP L");
+                    6 => {// SWAP L
                         self.l = self.swap(register_l);
                     },
-                    7 => {
-                        println!("SRL L");
+                    7 => {// SRL L
                         self.l = self.srl(register_l);
                     },
                     _ => unreachable!(),
@@ -2830,36 +2540,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC (HL)");
+                    0 => {// RLC (HL)
                         self.rlc_m_hl();
                     },
-                    1 => {
-                        println!("RRC (HL)");
+                    1 => {// RRC (HL)
                         self.rrc_m_hl();
                     },
-                    2 => {
-                        println!("RL (HL)");
+                    2 => {// RL (HL)
                         self.rl_m_hl();
                     },
-                    3 => {
-                        println!("RR (HL)");
+                    3 => {// RR (HL)
                         self.rr_m_hl();
                     },
-                    4 => {
-                        println!("SLA (HL)");
+                    4 => {// SLA (HL)
                         self.sla_m_hl();
                     },
-                    5 => {
-                        println!("SRA (HL)");
+                    5 => {// SRA (HL)
                         self.sra_m_hl();
                     },
-                    6 => {
-                        println!("SWAP (HL)");
+                    6 => {// SWAP (HL)
                         self.swap_m_hl();
                     },
-                    7 => {
-                        println!("SRL (HL)");
+                    7 => {// SRL (HL)
                         self.srl_m_hl();
                     },
                     _ => unreachable!(),
@@ -2868,36 +2570,28 @@ impl CPU {
             7 => {
                 let register_a = self.a;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RLC A");
+                    0 => {// RLC A
                         self.a = self.rlc(register_a);
                     },
-                    1 => {
-                        println!("RRC A");
+                    1 => {// RRC A
                         self.a = self.rrc(register_a);
                     },
-                    2 => {
-                        println!("RL A");
+                    2 => {// RL A
                         self.a = self.rl(register_a);
                     },
-                    3 => {
-                        println!("RR A");
+                    3 => {// RR A
                         self.a = self.rr(register_a);
                     },
-                    4 => {
-                        println!("SLA A");
+                    4 => {// SLA A
                         self.a = self.sla(register_a);
                     },
-                    5 => {
-                        println!("SRA A");
+                    5 => {// SRA A
                         self.a = self.sra(register_a);
                     },
-                    6 => {
-                        println!("SWAP A");
+                    6 => {// SWAP A
                         self.a = self.swap(register_a);
                     },
-                    7 => {
-                        println!("SRL A");
+                    7 => {// SRL A
                         self.a = self.srl(register_a);
                     },
                     _ => unreachable!(),
@@ -2916,36 +2610,28 @@ impl CPU {
             0 => {
                 let register_b = self.b;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, B");
+                    0 => {// BIT 0, B
                         self.bit_n_r_u8(0, register_b);
                     },
-                    1 => {
-                        println!("BIT 1, B");
+                    1 => {// BIT 1, B
                         self.bit_n_r_u8(1, register_b);
                     },
-                    2 => {
-                        println!("BIT 2, B");
+                    2 => {// BIT 2, B
                         self.bit_n_r_u8(2, register_b);
                     },
-                    3 => {
-                        println!("BIT 3, B");
+                    3 => {// BIT 3, B
                         self.bit_n_r_u8(3, register_b);
                     },
-                    4 => {
-                        println!("BIT 4, B");
+                    4 => {// BIT 4, B
                         self.bit_n_r_u8(4, register_b);
                     },
-                    5 => {
-                        println!("BIT 5, B");
+                    5 => {// BIT 5, B
                         self.bit_n_r_u8(5, register_b);
                     },
-                    6 => {
-                        println!("BIT 6, B");
+                    6 => {// BIT 6, B
                         self.bit_n_r_u8(6, register_b);
                     },
-                    7 => {
-                        println!("BIT 7, B");
+                    7 => {// BIT 7, B
                         self.bit_n_r_u8(7, register_b);
                     },
                     _ => unreachable!(),
@@ -2954,36 +2640,28 @@ impl CPU {
             1 => {
                 let register_c = self.c;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, C");
+                    0 => {// BIT 0, C
                         self.bit_n_r_u8(0, register_c);
                     },
-                    1 => {
-                        println!("BIT 1, C");
+                    1 => {// BIT 1, C
                         self.bit_n_r_u8(1, register_c);
                     },
-                    2 => {
-                        println!("BIT 2, C");
+                    2 => {// BIT 2, C
                         self.bit_n_r_u8(2, register_c);
                     },
-                    3 => {
-                        println!("BIT 3, C");
+                    3 => {// BIT 3, C
                         self.bit_n_r_u8(3, register_c);
                     },
-                    4 => {
-                        println!("BIT 4, C");
+                    4 => {// BIT 4, C
                         self.bit_n_r_u8(4, register_c);
                     },
-                    5 => {
-                        println!("BIT 5, C");
+                    5 => {// BIT 5, C
                         self.bit_n_r_u8(5, register_c);
                     },
-                    6 => {
-                        println!("BIT 6, C");
+                    6 => {// BIT 6, C
                         self.bit_n_r_u8(6, register_c);
                     },
-                    7 => {
-                        println!("BIT 7, C");
+                    7 => {// BIT 7, C
                         self.bit_n_r_u8(7, register_c);
                     },
                     _ => unreachable!(),
@@ -2992,36 +2670,28 @@ impl CPU {
             2 => {
                 let register_d = self.d;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, D");
+                    0 => {// BIT 0, D
                         self.bit_n_r_u8(0, register_d);
                     },
-                    1 => {
-                        println!("BIT 1, D");
+                    1 => {// BIT 1, D
                         self.bit_n_r_u8(1, register_d);
                     },
-                    2 => {
-                        println!("BIT 2, D");
+                    2 => {// BIT 2, D
                         self.bit_n_r_u8(2, register_d);
                     },
-                    3 => {
-                        println!("BIT 3, D");
+                    3 => {// BIT 3, D
                         self.bit_n_r_u8(3, register_d);
                     },
-                    4 => {
-                        println!("BIT 4, D");
+                    4 => {// BIT 4, D
                         self.bit_n_r_u8(4, register_d);
                     },
-                    5 => {
-                        println!("BIT 5, D");
+                    5 => {// BIT 5, D
                         self.bit_n_r_u8(5, register_d);
                     },
-                    6 => {
-                        println!("BIT 6, D");
+                    6 => {// BIT 6, D
                         self.bit_n_r_u8(6, register_d);
                     },
-                    7 => {
-                        println!("BIT 7, D");
+                    7 => {// BIT 7, D
                         self.bit_n_r_u8(7, register_d);
                     },
                     _ => unreachable!(),
@@ -3030,36 +2700,28 @@ impl CPU {
             3 => {
                 let register_e = self.e;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, E");
+                    0 => {// BIT 0, E
                         self.bit_n_r_u8(0, register_e);
                     },
-                    1 => {
-                        println!("BIT 1, E");
+                    1 => {// BIT 1, E
                         self.bit_n_r_u8(1, register_e);
                     },
-                    2 => {
-                        println!("BIT 2, E");
+                    2 => {// BIT 2, E
                         self.bit_n_r_u8(2, register_e);
                     },
-                    3 => {
-                        println!("BIT 3, E");
+                    3 => {// BIT 3, E
                         self.bit_n_r_u8(3, register_e);
                     },
-                    4 => {
-                        println!("BIT 4, E");
+                    4 => {// BIT 4, E
                         self.bit_n_r_u8(4, register_e);
                     },
-                    5 => {
-                        println!("BIT 5, E");
+                    5 => {// BIT 5, E
                         self.bit_n_r_u8(5, register_e);
                     },
-                    6 => {
-                        println!("BIT 6, E");
+                    6 => {// BIT 6, E
                         self.bit_n_r_u8(6, register_e);
                     },
-                    7 => {
-                        println!("BIT 7, E");
+                    7 => {// BIT 7, E
                         self.bit_n_r_u8(7, register_e);
                     },
                     _ => unreachable!(),
@@ -3068,36 +2730,28 @@ impl CPU {
             4 => {
                 let register_h = self.h;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, H");
+                    0 => {// BIT 0, H
                         self.bit_n_r_u8(0, register_h);
                     },
-                    1 => {
-                        println!("BIT 1, H");
+                    1 => {// BIT 1, H
                         self.bit_n_r_u8(1, register_h);
                     },
-                    2 => {
-                        println!("BIT 2, H");
+                    2 => {// BIT 2, H
                         self.bit_n_r_u8(2, register_h);
                     },
-                    3 => {
-                        println!("BIT 3, H");
+                    3 => {// BIT 3, H
                         self.bit_n_r_u8(3, register_h);
                     },
-                    4 => {
-                        println!("BIT 4, H");
+                    4 => {// BIT 4, H
                         self.bit_n_r_u8(4, register_h);
                     },
-                    5 => {
-                        println!("BIT 5, H");
+                    5 => {// BIT 5, H
                         self.bit_n_r_u8(5, register_h);
                     },
-                    6 => {
-                        println!("BIT 6, H");
+                    6 => {// BIT 6, H
                         self.bit_n_r_u8(6, register_h);
                     },
-                    7 => {
-                        println!("BIT 7, H");
+                    7 => {// BIT 7, H
                         self.bit_n_r_u8(7, register_h);
                     },
                     _ => unreachable!(),
@@ -3106,36 +2760,28 @@ impl CPU {
             5 => {
                 let register_l = self.l;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, L");
+                    0 => {// BIT 0, L
                         self.bit_n_r_u8(0, register_l);
                     },
-                    1 => {
-                        println!("BIT 1, L");
+                    1 => {// BIT 1, L
                         self.bit_n_r_u8(1, register_l);
                     },
-                    2 => {
-                        println!("BIT 2, L");
+                    2 => {// BIT 2, L
                         self.bit_n_r_u8(2, register_l);
                     },
-                    3 => {
-                        println!("BIT 3, L");
+                    3 => {// BIT 3, L
                         self.bit_n_r_u8(3, register_l);
                     },
-                    4 => {
-                        println!("BIT 4, L");
+                    4 => {// BIT 4, L
                         self.bit_n_r_u8(4, register_l);
                     },
-                    5 => {
-                        println!("BIT 5, L");
+                    5 => {// BIT 5, L
                         self.bit_n_r_u8(5, register_l);
                     },
-                    6 => {
-                        println!("BIT 6, L");
+                    6 => {// BIT 6, L
                         self.bit_n_r_u8(6, register_l);
                     },
-                    7 => {
-                        println!("BIT 7, L");
+                    7 => {// BIT 7, L
                         self.bit_n_r_u8(7, register_l);
                     },
                     _ => unreachable!(),
@@ -3143,36 +2789,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, (HL)");
+                    0 => {// BIT 0, (HL)
                         self.bit_n_m_hl(0);
                     },
-                    1 => {
-                        println!("BIT 1, (HL)");
+                    1 => {// BIT 1, (HL)
                         self.bit_n_m_hl(1);
                     },
-                    2 => {
-                        println!("BIT 2, (HL)");
+                    2 => {// BIT 2, (HL)
                         self.bit_n_m_hl(2);
                     },
-                    3 => {
-                        println!("BIT 3, (HL)");
+                    3 => {// BIT 3, (HL)
                         self.bit_n_m_hl(3);
                     },
-                    4 => {
-                        println!("BIT 4, (HL)");
+                    4 => {// BIT 4, (HL)
                         self.bit_n_m_hl(4);
                     },
-                    5 => {
-                        println!("BIT 5, (HL)");
+                    5 => {// BIT 5, (HL)
                         self.bit_n_m_hl(5);
                     },
-                    6 => {
-                        println!("BIT 6, (HL)");
+                    6 => {// BIT 6, (HL)
                         self.bit_n_m_hl(6);
                     },
-                    7 => {
-                        println!("BIT 7, (HL)");
+                    7 => {// BIT 7, (HL)
                         self.bit_n_m_hl(7);
                     },
                     _ => unreachable!(),
@@ -3181,36 +2819,28 @@ impl CPU {
             7 => {
                 let register_a = self.a;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("BIT 0, A");
+                    0 => {// BIT 0, A
                         self.bit_n_r_u8(0, register_a);
                     },
-                    1 => {
-                        println!("BIT 1, A");
+                    1 => {// BIT 1, A
                         self.bit_n_r_u8(1, register_a);
                     },
-                    2 => {
-                        println!("BIT 2, A");
+                    2 => {// BIT 2, A
                         self.bit_n_r_u8(2, register_a);
                     },
-                    3 => {
-                        println!("BIT 3, A");
+                    3 => {// BIT 3, A
                         self.bit_n_r_u8(3, register_a);
                     },
-                    4 => {
-                        println!("BIT 4, A");
+                    4 => {// BIT 4, A
                         self.bit_n_r_u8(4, register_a);
                     },
-                    5 => {
-                        println!("BIT 5, A");
+                    5 => {// BIT 5, A
                         self.bit_n_r_u8(5, register_a);
                     },
-                    6 => {
-                        println!("BIT 6, A");
+                    6 => {// BIT 6, A
                         self.bit_n_r_u8(6, register_a);
                     },
-                    7 => {
-                        println!("BIT 7, A");
+                    7 => {// BIT 7, A
                         self.bit_n_r_u8(7, register_a);
                     },
                     _ => unreachable!(),
@@ -3229,36 +2859,28 @@ impl CPU {
             0 => {
                 let register_b = self.b;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, B");
+                    0 => {// RES 0, B
                         self.b = self.res_n_r_u8(0, register_b);
                     },
-                    1 => {
-                        println!("RES 1, B");
+                    1 => {// RES 1, B
                         self.b = self.res_n_r_u8(1, register_b);
                     },
-                    2 => {
-                        println!("RES 2, B");
+                    2 => {// RES 2, B
                         self.b = self.res_n_r_u8(2, register_b);
                     },
-                    3 => {
-                        println!("RES 3, B");
+                    3 => {// RES 3, B
                         self.b = self.res_n_r_u8(3, register_b);
                     },
-                    4 => {
-                        println!("RES 4, B");
+                    4 => {// RES 4, B
                         self.b = self.res_n_r_u8(4, register_b);
                     },
-                    5 => {
-                        println!("RES 5, B");
+                    5 => {// RES 5, B
                         self.b = self.res_n_r_u8(5, register_b);
                     },
-                    6 => {
-                        println!("RES 6, B");
+                    6 => {// RES 6, B
                         self.b = self.res_n_r_u8(6, register_b);
                     },
-                    7 => {
-                        println!("RES 7, B");
+                    7 => {// RES 7, B
                         self.b = self.res_n_r_u8(7, register_b);
                     },
                     _ => unreachable!(),
@@ -3267,36 +2889,28 @@ impl CPU {
             1 => {
                 let register_c = self.c;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, C");
+                    0 => {// RES 0, C
                         self.c = self.res_n_r_u8(0, register_c);
                     },
-                    1 => {
-                        println!("RES 1, C");
+                    1 => {// RES 1, C
                         self.c = self.res_n_r_u8(1, register_c);
                     },
-                    2 => {
-                        println!("RES 2, C");
+                    2 => {// RES 2, C
                         self.c = self.res_n_r_u8(2, register_c);
                     },
-                    3 => {
-                        println!("RES 3, C");
+                    3 => {// RES 3, C
                         self.c = self.res_n_r_u8(3, register_c);
                     },
-                    4 => {
-                        println!("RES 4, C");
+                    4 => {// RES 4, C
                         self.c = self.res_n_r_u8(4, register_c);
                     },
-                    5 => {
-                        println!("RES 5, C");
+                    5 => {// RES 5, C
                         self.c = self.res_n_r_u8(5, register_c);
                     },
-                    6 => {
-                        println!("RES 6, C");
+                    6 => {// RES 6, C
                         self.c = self.res_n_r_u8(6, register_c);
                     },
-                    7 => {
-                        println!("RES 7, C");
+                    7 => {// RES 7, C
                         self.c = self.res_n_r_u8(7, register_c);
                     },
                     _ => unreachable!(),
@@ -3305,36 +2919,28 @@ impl CPU {
             2 => {
                 let register_d = self.d;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, D");
+                    0 => {// RES 0, D
                         self.d = self.res_n_r_u8(0, register_d);
                     },
-                    1 => {
-                        println!("RES 1, D");
+                    1 => {// RES 1, D
                         self.d = self.res_n_r_u8(1, register_d);
                     },
-                    2 => {
-                        println!("RES 2, D");
+                    2 => {// RES 2, D
                         self.d = self.res_n_r_u8(2, register_d);
                     },
-                    3 => {
-                        println!("RES 3, D");
+                    3 => {// RES 3, D
                         self.d = self.res_n_r_u8(3, register_d);
                     },
-                    4 => {
-                        println!("RES 4, D");
+                    4 => {// RES 4, D
                         self.d = self.res_n_r_u8(4, register_d);
                     },
-                    5 => {
-                        println!("RES 5, D");
+                    5 => {// RES 5, D
                         self.d = self.res_n_r_u8(5, register_d);
                     },
-                    6 => {
-                        println!("RES 6, D");
+                    6 => {// RES 6, D
                         self.d = self.res_n_r_u8(6, register_d);
                     },
-                    7 => {
-                        println!("RES 7, D");
+                    7 => {// RES 7, D
                         self.d = self.res_n_r_u8(7, register_d);
                     },
                     _ => unreachable!(),
@@ -3343,36 +2949,28 @@ impl CPU {
             3 => {
                 let register_e = self.e;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, E");
+                    0 => {// RES 0, E
                         self.e = self.res_n_r_u8(0, register_e);
                     },
-                    1 => {
-                        println!("RES 1, E");
+                    1 => {// RES 1, E
                         self.e = self.res_n_r_u8(1, register_e);
                     },
-                    2 => {
-                        println!("RES 2, E");
+                    2 => {// RES 2, E
                         self.e = self.res_n_r_u8(2, register_e);
                     },
-                    3 => {
-                        println!("RES 3, E");
+                    3 => {// RES 3, E
                         self.e = self.res_n_r_u8(3, register_e);
                     },
-                    4 => {
-                        println!("RES 4, E");
+                    4 => {// RES 4, E
                         self.e = self.res_n_r_u8(4, register_e);
                     },
-                    5 => {
-                        println!("RES 5, E");
+                    5 => {// RES 5, E
                         self.e = self.res_n_r_u8(5, register_e);
                     },
-                    6 => {
-                        println!("RES 6, E");
+                    6 => {// RES 6, E
                         self.e = self.res_n_r_u8(6, register_e);
                     },
-                    7 => {
-                        println!("RES 7, E");
+                    7 => {// RES 7, E
                         self.e = self.res_n_r_u8(7, register_e);
                     },
                     _ => unreachable!(),
@@ -3381,36 +2979,28 @@ impl CPU {
             4 => {
                 let register_h = self.h;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, H");
+                    0 => {// RES 0, H
                         self.h = self.res_n_r_u8(0, register_h);
                     },
-                    1 => {
-                        println!("RES 1, H");
+                    1 => {// RES 1, H
                         self.h = self.res_n_r_u8(1, register_h);
                     },
-                    2 => {
-                        println!("RES 2, H");
+                    2 => {// RES 2, H
                         self.h = self.res_n_r_u8(2, register_h);
                     },
-                    3 => {
-                        println!("RES 3, H");
+                    3 => {// RES 3, H
                         self.h = self.res_n_r_u8(3, register_h);
                     },
-                    4 => {
-                        println!("RES 4, H");
+                    4 => {// RES 4, H
                         self.h = self.res_n_r_u8(4, register_h);
                     },
-                    5 => {
-                        println!("RES 5, H");
+                    5 => {// RES 5, H
                         self.h = self.res_n_r_u8(5, register_h);
                     },
-                    6 => {
-                        println!("RES 6, H");
+                    6 => {// RES 6, H
                         self.h = self.res_n_r_u8(6, register_h);
                     },
-                    7 => {
-                        println!("RES 7, H");
+                    7 => {// RES 7, H
                         self.h = self.res_n_r_u8(7, register_h);
                     },
                     _ => unreachable!(),
@@ -3419,36 +3009,28 @@ impl CPU {
             5 => {
                 let register_l = self.l;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, L");
+                    0 => {// RES 0, L
                         self.l = self.res_n_r_u8(0, register_l);
                     },
-                    1 => {
-                        println!("RES 1, L");
+                    1 => {// RES 1, L
                         self.l = self.res_n_r_u8(1, register_l);
                     },
-                    2 => {
-                        println!("RES 2, L");
+                    2 => {// RES 2, L
                         self.l = self.res_n_r_u8(2, register_l);
                     },
-                    3 => {
-                        println!("RES 3, L");
+                    3 => {// RES 3, L
                         self.l = self.res_n_r_u8(3, register_l);
                     },
-                    4 => {
-                        println!("RES 4, L");
+                    4 => {// RES 4, L
                         self.l = self.res_n_r_u8(4, register_l);
                     },
-                    5 => {
-                        println!("RES 5, L");
+                    5 => {// RES 5, L
                         self.l = self.res_n_r_u8(5, register_l);
                     },
-                    6 => {
-                        println!("RES 6, L");
+                    6 => {// RES 6, L
                         self.l = self.res_n_r_u8(6, register_l);
                     },
-                    7 => {
-                        println!("RES 7, L");
+                    7 => {// RES 7, L
                         self.l = self.res_n_r_u8(7, register_l);
                     },
                     _ => unreachable!(),
@@ -3456,36 +3038,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, (HL)");
+                    0 => {// RES 0, (HL)
                         self.res_n_m_hl(0);
                     },
-                    1 => {
-                        println!("RES 1, (HL)");
+                    1 => {// RES 1, (HL)
                         self.res_n_m_hl(1);
                     },
-                    2 => {
-                        println!("RES 2, (HL)");
+                    2 => {// RES 2, (HL)
                         self.res_n_m_hl(2);
                     },
-                    3 => {
-                        println!("RES 3, (HL)");
+                    3 => {// RES 3, (HL)
                         self.res_n_m_hl(3);
                     },
-                    4 => {
-                        println!("RES 4, (HL)");
+                    4 => {// RES 4, (HL)
                         self.res_n_m_hl(4);
                     },
-                    5 => {
-                        println!("RES 5, (HL)");
+                    5 => {// RES 5, (HL)
                         self.res_n_m_hl(5);
                     },
-                    6 => {
-                        println!("RES 6, (HL)");
+                    6 => {// RES 6, (HL)
                         self.res_n_m_hl(6);
                     },
-                    7 => {
-                        println!("RES 7, (HL)");
+                    7 => {// RES 7, (HL)
                         self.res_n_m_hl(7);
                     },
                     _ => unreachable!(),
@@ -3494,36 +3068,28 @@ impl CPU {
             7 => {
                 let register_a = self.a;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("RES 0, A");
+                    0 => {// RES 0, A
                         self.a = self.res_n_r_u8(0, register_a);
                     },
-                    1 => {
-                        println!("RES 1, A");
+                    1 => {// RES 1, A
                         self.a = self.res_n_r_u8(1, register_a);
                     },
-                    2 => {
-                        println!("RES 2, A");
+                    2 => {// RES 2, A
                         self.a = self.res_n_r_u8(2, register_a);
                     },
-                    3 => {
-                        println!("RES 3, A");
+                    3 => {// RES 3, A
                         self.a = self.res_n_r_u8(3, register_a);
                     },
-                    4 => {
-                        println!("RES 4, A");
+                    4 => {// RES 4, A
                         self.a = self.res_n_r_u8(4, register_a);
                     },
-                    5 => {
-                        println!("RES 5, A");
+                    5 => {// RES 5, A
                         self.a = self.res_n_r_u8(5, register_a);
                     },
-                    6 => {
-                        println!("RES 6, A");
+                    6 => {// RES 6, A
                         self.a = self.res_n_r_u8(6, register_a);
                     },
-                    7 => {
-                        println!("RES 7, A");
+                    7 => {// RES 7, A
                         self.a = self.res_n_r_u8(7, register_a);
                     },
                     _ => unreachable!(),
@@ -3542,36 +3108,28 @@ impl CPU {
             0 => {
                 let register_b = self.b;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, B");
+                    0 => {// SET 0, B
                         self.b = self.set_n_r_u8(0, register_b);
                     },
-                    1 => {
-                        println!("SET 1, B");
+                    1 => {// SET 1, B
                         self.b = self.set_n_r_u8(1, register_b);
                     },
-                    2 => {
-                        println!("SET 2, B");
+                    2 => {// SET 2, B
                         self.b = self.set_n_r_u8(2, register_b);
                     },
-                    3 => {
-                        println!("SET 3, B");
+                    3 => {// SET 3, B
                         self.b = self.set_n_r_u8(3, register_b);
                     },
-                    4 => {
-                        println!("SET 4, B");
+                    4 => {// SET 4, B
                         self.b = self.set_n_r_u8(4, register_b);
                     },
-                    5 => {
-                        println!("SET 5, B");
+                    5 => {// SET 5, B
                         self.b = self.set_n_r_u8(5, register_b);
                     },
-                    6 => {
-                        println!("SET 6, B");
+                    6 => {// SET 6, B
                         self.b = self.set_n_r_u8(6, register_b);
                     },
-                    7 => {
-                        println!("SET 7, B");
+                    7 => {// SET 7, B
                         self.b = self.set_n_r_u8(7, register_b);
                     },
                     _ => unreachable!(),
@@ -3580,36 +3138,28 @@ impl CPU {
             1 => {
                 let register_c = self.c;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, C");
+                    0 => {// SET 0, C
                         self.c = self.set_n_r_u8(0, register_c);
                     },
-                    1 => {
-                        println!("SET 1, C");
+                    1 => {// SET 1, C
                         self.c = self.set_n_r_u8(1, register_c);
                     },
-                    2 => {
-                        println!("SET 2, C");
+                    2 => {// SET 2, C
                         self.c = self.set_n_r_u8(2, register_c);
                     },
-                    3 => {
-                        println!("SET 3, C");
+                    3 => {// SET 3, C
                         self.c = self.set_n_r_u8(3, register_c);
                     },
-                    4 => {
-                        println!("SET 4, C");
+                    4 => {// SET 4, C
                         self.c = self.set_n_r_u8(4, register_c);
                     },
-                    5 => {
-                        println!("SET 5, C");
+                    5 => {// SET 5, C
                         self.c = self.set_n_r_u8(5, register_c);
                     },
-                    6 => {
-                        println!("SET 6, C");
+                    6 => {// SET 6, C
                         self.c = self.set_n_r_u8(6, register_c);
                     },
-                    7 => {
-                        println!("SET 7, C");
+                    7 => {// SET 7, C
                         self.c = self.set_n_r_u8(7, register_c);
                     },
                     _ => unreachable!(),
@@ -3618,36 +3168,28 @@ impl CPU {
             2 => {
                 let register_d = self.d;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, D");
+                    0 => {// SET 0, D
                         self.d = self.set_n_r_u8(0, register_d);
                     },
-                    1 => {
-                        println!("SET 1, D");
+                    1 => {// SET 1, D
                         self.d = self.set_n_r_u8(1, register_d);
                     },
-                    2 => {
-                        println!("SET 2, D");
+                    2 => {// SET 2, D
                         self.d = self.set_n_r_u8(2, register_d);
                     },
-                    3 => {
-                        println!("SET 3, D");
+                    3 => {// SET 3, D
                         self.d = self.set_n_r_u8(3, register_d);
                     },
-                    4 => {
-                        println!("SET 4, D");
+                    4 => {// SET 4, D
                         self.d = self.set_n_r_u8(4, register_d);
                     },
-                    5 => {
-                        println!("SET 5, D");
+                    5 => {// SET 5, D
                         self.d = self.set_n_r_u8(5, register_d);
                     },
-                    6 => {
-                        println!("SET 6, D");
+                    6 => {// SET 6, D
                         self.d = self.set_n_r_u8(6, register_d);
                     },
-                    7 => {
-                        println!("SET 7, D");
+                    7 => {// SET 7, D
                         self.d = self.set_n_r_u8(7, register_d);
                     },
                     _ => unreachable!(),
@@ -3656,36 +3198,28 @@ impl CPU {
             3 => {
                 let register_e = self.e;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, E");
+                    0 => {// SET 0, E
                         self.e = self.set_n_r_u8(0, register_e);
                     },
-                    1 => {
-                        println!("SET 1, E");
+                    1 => {// SET 1, E
                         self.e = self.set_n_r_u8(1, register_e);
                     },
-                    2 => {
-                        println!("SET 2, E");
+                    2 => {// SET 2, E
                         self.e = self.set_n_r_u8(2, register_e);
                     },
-                    3 => {
-                        println!("SET 3, E");
+                    3 => {// SET 3, E
                         self.e = self.set_n_r_u8(3, register_e);
                     },
-                    4 => {
-                        println!("SET 4, E");
+                    4 => {// SET 4, E
                         self.e = self.set_n_r_u8(4, register_e);
                     },
-                    5 => {
-                        println!("SET 5, E");
+                    5 => {// SET 5, E
                         self.e = self.set_n_r_u8(5, register_e);
                     },
-                    6 => {
-                        println!("SET 6, E");
+                    6 => {// SET 6, E
                         self.e = self.set_n_r_u8(6, register_e);
                     },
-                    7 => {
-                        println!("SET 7, E");
+                    7 => {// SET 7, E
                         self.e = self.set_n_r_u8(7, register_e);
                     },
                     _ => unreachable!(),
@@ -3694,36 +3228,28 @@ impl CPU {
             4 => {
                 let register_h = self.h;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, H");
+                    0 => {// SET 0, H
                         self.h = self.set_n_r_u8(0, register_h);
                     },
-                    1 => {
-                        println!("SET 1, H");
+                    1 => {// SET 1, H
                         self.h = self.set_n_r_u8(1, register_h);
                     },
-                    2 => {
-                        println!("SET 2, H");
+                    2 => {// SET 2, H
                         self.h = self.set_n_r_u8(2, register_h);
                     },
-                    3 => {
-                        println!("SET 3, H");
+                    3 => {// SET 3, H
                         self.h = self.set_n_r_u8(3, register_h);
                     },
-                    4 => {
-                        println!("SET 4, H");
+                    4 => {// SET 4, H
                         self.h = self.set_n_r_u8(4, register_h);
                     },
-                    5 => {
-                        println!("SET 5, H");
+                    5 => {// SET 5, H
                         self.h = self.set_n_r_u8(5, register_h);
                     },
-                    6 => {
-                        println!("SET 6, H");
+                    6 => {// SET 6, H
                         self.h = self.set_n_r_u8(6, register_h);
                     },
-                    7 => {
-                        println!("SET 7, H");
+                    7 => {// SET 7, H
                         self.h = self.set_n_r_u8(7, register_h);
                     },
                     _ => unreachable!(),
@@ -3732,36 +3258,28 @@ impl CPU {
             5 => {
                 let register_l = self.l;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, L");
+                    0 => {// SET 0, L
                         self.l = self.set_n_r_u8(0, register_l);
                     },
-                    1 => {
-                        println!("SET 1, L");
+                    1 => {// SET 1, L
                         self.l = self.set_n_r_u8(1, register_l);
                     },
-                    2 => {
-                        println!("SET 2, L");
+                    2 => {// SET 2, L
                         self.l = self.set_n_r_u8(2, register_l);
                     },
-                    3 => {
-                        println!("SET 3, L");
+                    3 => {// SET 3, L
                         self.l = self.set_n_r_u8(3, register_l);
                     },
-                    4 => {
-                        println!("SET 4, L");
+                    4 => {// SET 4, L
                         self.l = self.set_n_r_u8(4, register_l);
                     },
-                    5 => {
-                        println!("SET 5, L");
+                    5 => {// SET 5, L
                         self.l = self.set_n_r_u8(5, register_l);
                     },
-                    6 => {
-                        println!("SET 6, L");
+                    6 => {// SET 6, L
                         self.l = self.set_n_r_u8(6, register_l);
                     },
-                    7 => {
-                        println!("SET 7, L");
+                    7 => {// SET 7, L
                         self.l = self.set_n_r_u8(7, register_l);
                     },
                     _ => unreachable!(),
@@ -3769,36 +3287,28 @@ impl CPU {
             },
             6 => {
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, (HL)");
+                    0 => {// SET 0, (HL)
                         self.set_n_m_hl(0);
                     },
-                    1 => {
-                        println!("SET 1, (HL)");
+                    1 => {// SET 1, (HL)
                         self.set_n_m_hl(1);
                     },
-                    2 => {
-                        println!("SET 2, (HL)");
+                    2 => {// SET 2, (HL)
                         self.set_n_m_hl(2);
                     },
-                    3 => {
-                        println!("SET 3, (HL)");
+                    3 => {// SET 3, (HL)
                         self.set_n_m_hl(3);
                     },
-                    4 => {
-                        println!("SET 4, (HL)");
+                    4 => {// SET 4, (HL)
                         self.set_n_m_hl(4);
                     },
-                    5 => {
-                        println!("SET 5, (HL)");
+                    5 => {// SET 5, (HL)
                         self.set_n_m_hl(5);
                     },
-                    6 => {
-                        println!("SET 6, (HL)");
+                    6 => {// SET 6, (HL)
                         self.set_n_m_hl(6);
                     },
-                    7 => {
-                        println!("SET 7, (HL)");
+                    7 => {// SET 7, (HL)
                         self.set_n_m_hl(7);
                     },
                     _ => unreachable!(),
@@ -3807,36 +3317,28 @@ impl CPU {
             7 => {
                 let register_a = self.a;
                 match bits_5_4_3 {
-                    0 => {
-                        println!("SET 0, A");
+                    0 => {// SET 0, A
                         self.a = self.set_n_r_u8(0, register_a);
                     },
-                    1 => {
-                        println!("SET 1, A");
+                    1 => {// SET 1, A
                         self.a = self.set_n_r_u8(1, register_a);
                     },
-                    2 => {
-                        println!("SET 2, A");
+                    2 => {// SET 2, A
                         self.a = self.set_n_r_u8(2, register_a);
                     },
-                    3 => {
-                        println!("SET 3, A");
+                    3 => {// SET 3, A
                         self.a = self.set_n_r_u8(3, register_a);
                     },
-                    4 => {
-                        println!("SET 4, A");
+                    4 => {// SET 4, A
                         self.a = self.set_n_r_u8(4, register_a);
                     },
-                    5 => {
-                        println!("SET 5, A");
+                    5 => {// SET 5, A
                         self.a = self.set_n_r_u8(5, register_a);
                     },
-                    6 => {
-                        println!("SET 6, A");
+                    6 => {// SET 6, A
                         self.a = self.set_n_r_u8(6, register_a);
                     },
-                    7 => {
-                        println!("SET 7, A");
+                    7 => {// SET 7, A
                         self.a = self.set_n_r_u8(7, register_a);
                     },
                     _ => unreachable!(),
