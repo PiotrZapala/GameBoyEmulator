@@ -4,6 +4,7 @@ mod apu;
 mod mmu;
 mod timer;
 mod utils;
+mod joypad;
 mod cartridge;
 
 use std::cell::RefCell;
@@ -14,9 +15,11 @@ use crate::ppu::PPU;
 use crate::apu::APU;
 use crate::mmu::MMU;
 use crate::timer::TIMER;
+use crate::joypad::JOYPAD;
 use crate::cartridge::CARTRIDGE;
 
 pub struct EMULATOR {
+    joypad: Rc<RefCell<JOYPAD>>,
     timer: Rc<RefCell<TIMER>>,
     ppu: Rc<RefCell<PPU>>,
     apu: Rc<RefCell<APU>>,
@@ -29,10 +32,13 @@ impl EMULATOR {
         let timer = Rc::new(RefCell::new(TIMER::new()));
         let ppu = Rc::new(RefCell::new(PPU::new()));
         let apu = Rc::new(RefCell::new(APU::new()));
-        let mmu = Rc::new(RefCell::new(MMU::new(Rc::clone(&timer), Rc::clone(&apu), Rc::clone(&ppu), cartridge)));
+        let joypad = Rc::new(RefCell::new(JOYPAD::new()));
+        let mmu = Rc::new(RefCell::new(MMU::new(Rc::clone(&joypad), Rc::clone(&timer), Rc::clone(&apu), Rc::clone(&ppu), cartridge)));
+        ppu.borrow_mut().set_mmu(Rc::clone(&mmu));
         let cpu = CPU::new(Rc::clone(&mmu), Rc::clone(&timer));
 
         EMULATOR {
+            joypad,
             timer,
             ppu,
             apu,
