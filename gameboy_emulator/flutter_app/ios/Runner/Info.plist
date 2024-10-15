@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Flutter App</string>
+	<string>GameBoy Emulator</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>This app requires access to your documents to add game files.</string>
+	<key>NSFileProviderUsageDescription</key>
+	<string>This app requires access to your files to add game files.</string>
 </dict>
 </plist>

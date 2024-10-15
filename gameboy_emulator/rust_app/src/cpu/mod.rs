@@ -4,17 +4,34 @@ use crate::mmu::MMU;
 use crate::timer::TIMER;
 use instructions::*;
 
-pub enum INTERRUPT {
-    VBlank = 0x0040,
-    LCDStat = 0x0048,
-    Timer = 0x0050,
-    Serial = 0x0058,
-    Joypad = 0x0060,
+use std::cell::RefCell;
+use std::rc::Rc;
+
+pub enum INTERRUPT_ADDRESS {
+    VBlank = 0x0040,   // Address for Vertical Blank interrupt
+    LCDStat = 0x0048,  // Address for LCD Status interrupt
+    Timer = 0x0050,    // Address for Timer interrupt
+    Serial = 0x0058,   // Address for Serial I/O interrupt
+    Joypad = 0x0060,   // Address for Joypad interrupt
 }
 
-impl INTERRUPT {
+impl INTERRUPT_ADDRESS {
     pub fn address(self) -> u16 {
         self as u16
+    }
+}
+
+pub enum INTERRUPT_FLAG {
+    VBlank = 0b00000001,   // Flag bit for Vertical Blank interrupt
+    LCDStat = 0b00000010,  // Flag bit for LCD Status interrupt
+    Timer = 0b00000100,    // Flag bit for Timer interrupt
+    Serial = 0b00001000,   // Flag bit for Serial I/O interrupt
+    Joypad = 0b00010000,   // Flag bit for Joypad interrupt
+}
+
+impl INTERRUPT_FLAG {
+    pub fn value(self) -> u8 {
+        self as u8
     }
 }
 
@@ -36,24 +53,25 @@ impl RST {
 }
 
 pub struct CPU {
-    pub a: u8,
-    pub b: u8,
-    pub c: u8,
-    pub d: u8,
-    pub e: u8,
-    pub f: u8,
-    pub h: u8,
-    pub l: u8,
-    pub pc: u16,
-    pub sp: u16,
-    pub ime: bool,
-    pub halted: bool,
-    pub mmu: MMU,
-    pub timer: TIMER,
+    pub a: u8,                     // Accumulator register. Used in arithmetic and logic operations.
+    pub b: u8,                     // General-purpose register B. Often paired with C as BC.
+    pub c: u8,                     // General-purpose register C. Often paired with B as BC.
+    pub d: u8,                     // General-purpose register D. Often paired with E as DE.
+    pub e: u8,                     // General-purpose register E. Often paired with D as DE.
+    pub f: u8,                     // Flag register. Contains status flags (Zero, Subtract, Half Carry, Carry).
+    pub h: u8,                     // General-purpose register H. Often paired with L as HL.
+    pub l: u8,                     // General-purpose register L. Often paired with H as HL.
+    pub pc: u16,                   // Program Counter. Points to the next instruction to be executed in memory.
+    pub sp: u16,                   // Stack Pointer. Points to the top of the stack.
+    pub ime: bool,                 // Interrupt Master Enable flag. Controls the global interrupt enable/disable state.
+    pub halted: bool,              // Halt flag. Indicates if the CPU is in a halted state, waiting for an interrupt.
+    pub mmu: Rc<RefCell<MMU>>,     // Memory Management Unit. Manages access to different memory regions.
+    pub timer: Rc<RefCell<TIMER>>, // Timer. Manages the CPU's timing and counting operations.
 }
 
+
 impl CPU {
-    pub fn new(mmu: MMU, timer: TIMER) -> Self {
+    pub fn new(mmu: Rc<RefCell<MMU>>, timer: Rc<RefCell<TIMER>>) -> Self {
         CPU {
             a: 0,
             b: 0,
@@ -74,22 +92,60 @@ impl CPU {
 
     pub fn tick(&mut self) {
         self.handle_interrupts();
-        let opcode = self.mmu.fetch_instruction(self.pc);
+        let opcode = self.mmu.borrow().fetch_instruction(self.pc);
         self.execute(opcode);
     }
 
-    fn execute(&mut self, opcode: u8) {
+    pub fn execute(&mut self, opcode: u8) {
         if opcode != 0xCB {
             self.execute_not_prefixed_instruction(opcode);
         } else {
             self.pc += 1;
-            let new_opcode = self.mmu.fetch_instruction(self.pc);
+            let new_opcode = self.mmu.borrow().fetch_instruction(self.pc);
             self.execute_prefixed_instruction(new_opcode);
         }
     }
 
-    fn handle_interrupts(&mut self) {
+    fn handle_interrupts(&mut self) -> bool {
+        if !self.ime {
+            return false;
+        } 
 
+        let interrupt_flag = self.mmu.borrow().read_byte(0xFF0F);
+        let interrupt_enable = self.mmu.borrow().read_byte(0xFFFF);
+        let is_enabled_interrupts =  interrupt_flag & interrupt_enable & 0b00011111;
+
+        if is_enabled_interrupts == 0 {
+            return false;
+        }
+
+        self.sp -= 2;
+        self.mmu.borrow_mut().write_byte(self.sp + 1, (self.pc >> 8) as u8);
+        self.mmu.borrow_mut().write_byte(self.sp, (self.pc & 0xFF) as u8);
+
+        if interrupt_flag & INTERRUPT_FLAG::VBlank.value() != 0 {
+            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::VBlank.value());
+            self.pc = INTERRUPT_ADDRESS::VBlank.address();
+            self.ime = false;
+        } else if interrupt_flag & INTERRUPT_FLAG::LCDStat.value() != 0 {
+            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::LCDStat.value());
+            self.pc = INTERRUPT_ADDRESS::LCDStat.address();
+            self.ime = false;
+        } else if interrupt_flag & INTERRUPT_FLAG::Timer.value() != 0 {
+            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Timer.value());
+            self.pc = INTERRUPT_ADDRESS::Timer.address();
+            self.ime = false;
+        } else if interrupt_flag & INTERRUPT_FLAG::Serial.value() != 0 {
+            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Serial.value());
+            self.pc = INTERRUPT_ADDRESS::Serial.address();
+            self.ime = false;
+        } else if interrupt_flag & INTERRUPT_FLAG::Joypad.value() != 0 {
+            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Joypad.value());
+            self.pc = INTERRUPT_ADDRESS::Joypad.address();
+            self.ime = false;
+        }
+
+        return true;
     }
 
     fn update_flags(&mut self, zero: Option<bool>, carry: Option<bool>, negative: Option<bool>, half_carry: Option<bool>) {
