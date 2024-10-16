@@ -1,7 +1,6 @@
 mod instructions;
 
 use crate::mmu::MMU;
-use crate::timer::TIMER;
 use instructions::*;
 
 use std::cell::RefCell;
@@ -65,13 +64,12 @@ pub struct CPU {
     pub sp: u16,                   // Stack Pointer. Points to the top of the stack.
     pub ime: bool,                 // Interrupt Master Enable flag. Controls the global interrupt enable/disable state.
     pub halted: bool,              // Halt flag. Indicates if the CPU is in a halted state, waiting for an interrupt.
+    pub cycles: u16,               // Cycles number. Stores the number of cycles executed by the last instruction.
     pub mmu: Rc<RefCell<MMU>>,     // Memory Management Unit. Manages access to different memory regions.
-    pub timer: Rc<RefCell<TIMER>>, // Timer. Manages the CPU's timing and counting operations.
 }
 
-
 impl CPU {
-    pub fn new(mmu: Rc<RefCell<MMU>>, timer: Rc<RefCell<TIMER>>) -> Self {
+    pub fn new(mmu: Rc<RefCell<MMU>>) -> Self {
         CPU {
             a: 0,
             b: 0,
@@ -85,8 +83,8 @@ impl CPU {
             sp: 0,
             ime: false,
             halted: false,
+            cycles: 0,
             mmu,
-            timer,
         }
     }
 
@@ -104,6 +102,20 @@ impl CPU {
             let new_opcode = self.mmu.borrow().fetch_instruction(self.pc);
             self.execute_prefixed_instruction(new_opcode);
         }
+    }
+
+    pub fn set_cycles(&mut self, cycles: u16) {
+        self.cycles = cycles;
+    }
+
+    pub fn get_cycles(&self) -> u16 {
+        self.cycles
+    }
+
+    pub fn request_interrupt(&mut self, interrupt: u8) {
+        let current_interrupt_flag = self.mmu.borrow().read_byte(0xFF0F);
+        let new_interrupt_flag = current_interrupt_flag | interrupt;
+        self.mmu.borrow_mut().write_byte(0xFF0F, new_interrupt_flag);
     }
 
     fn handle_interrupts(&mut self) -> bool {
