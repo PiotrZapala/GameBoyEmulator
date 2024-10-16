@@ -50,9 +50,7 @@ impl TIMER {
         }
     }
 
-    pub fn tick(&mut self, cpu: &mut CPU) {
-        let cycles = cpu.get_cycles();
-
+    pub fn tick(&mut self, cycles: u16) {
         self.div_counter += cycles;
         if self.div_counter >= 256 {
             self.div = self.div.wrapping_add(1);
