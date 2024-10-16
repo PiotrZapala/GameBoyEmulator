@@ -1,12 +1,23 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
+use crate::cpu::CPU;
+
 pub struct JOYPAD {
-    pub joy: u8,  // Joypad register (0xFF00), holding the button state and selected button group
+    joy: u8,  // Joypad register (0xFF00), holding the button state and selected button group
+    cpu: Option<Rc<RefCell<CPU>>>,
 }
 
 impl JOYPAD {
     pub fn new() -> Self {
         JOYPAD {
             joy: 0xFF,
+            cpu: None,
         }
+    }
+
+    pub fn set_cpu(&mut self, cpu: Rc<RefCell<CPU>>) {
+        self.cpu = Some(cpu);
     }
 
     pub fn read_byte(&self) -> u8 {
@@ -50,7 +61,9 @@ impl JOYPAD {
             let was_pressed = self.joy & (1 << bit_position) == 0;
             if !was_pressed {
                 self.joy &= !(1 << bit_position);
-                //cpu.request_interrupt();
+                if let Some(ref cpu) = self.cpu {
+                    cpu.borrow_mut().request_interrupt(0b00010000);
+                }
             }
         }
     }
