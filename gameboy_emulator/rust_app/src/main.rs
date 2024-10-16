@@ -24,7 +24,7 @@ pub struct EMULATOR {
     ppu: Rc<RefCell<PPU>>,
     apu: Rc<RefCell<APU>>,
     mmu: Rc<RefCell<MMU>>,
-    cpu: CPU,
+    cpu: Rc<RefCell<CPU>>,
 }
 
 impl EMULATOR {
@@ -35,7 +35,9 @@ impl EMULATOR {
         let joypad = Rc::new(RefCell::new(JOYPAD::new()));
         let mmu = Rc::new(RefCell::new(MMU::new(Rc::clone(&joypad), Rc::clone(&timer), Rc::clone(&apu), Rc::clone(&ppu), cartridge)));
         ppu.borrow_mut().set_mmu(Rc::clone(&mmu));
-        let cpu = CPU::new(Rc::clone(&mmu), Rc::clone(&timer));
+        let cpu = Rc::new(RefCell::new(CPU::new(Rc::clone(&mmu))));
+        timer.borrow_mut().set_cpu(Rc::clone(&cpu));
+        joypad.borrow_mut().set_cpu(Rc::clone(&cpu));
 
         EMULATOR {
             joypad,
@@ -48,9 +50,7 @@ impl EMULATOR {
     }
 
     pub fn run(&mut self) {
-        self.cpu.a = 10;
-        self.cpu.execute(0x3C);
-        println!("{}", self.cpu.a);
+
     }
 }
 
