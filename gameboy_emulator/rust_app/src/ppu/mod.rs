@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::mmu::MMU;
+use crate::cpu::CPU;
 
 pub struct PPU {
     lcdc: u8,         // LCD Control (0xFF40)
@@ -20,6 +21,7 @@ pub struct PPU {
     oam: [u8; 160],   // Object Attribute Memory (0xFE00 - 0xFE9F)
     screen_buffer: [[u32; 160]; 144], // Screen buffer
     mmu: Option<Rc<RefCell<MMU>>>,
+    cpu: Option<Rc<RefCell<CPU>>>,
 }
 
 impl PPU {
@@ -41,6 +43,7 @@ impl PPU {
             oam: [0; 160],
             screen_buffer: [[0; 160]; 144],
             mmu: None,
+            cpu: None,
         }
     }
 
@@ -72,7 +75,6 @@ impl PPU {
             0xFF41 => self.stat = value,
             0xFF42 => self.scy = value,
             0xFF43 => self.scx = value,
-            0xFF44 => self.ly = value,
             0xFF45 => self.lyc = value,
             0xFF46 => {
                 self.dma = value;
@@ -91,6 +93,58 @@ impl PPU {
         self.mmu = Some(mmu);
     }
 
+    pub fn set_cpu(&mut self, cpu: Rc<RefCell<CPU>>) {
+        self.cpu = Some(cpu);
+    }
+
+    pub fn set_ly(&mut self, value: u8) {
+        self.ly = value;
+        if self.ly == self.lyc {
+            self.stat |= 0x04;
+            if self.stat & 0x40 != 0 {
+                if let Some(cpu) = &self.cpu {
+                    cpu.borrow_mut().request_interrupt(0b00000010);
+                }
+            }
+        } else {
+            self.stat &= !0x04;
+        }
+    }
+
+    pub fn set_stat_mode(&mut self, mode: u8) {
+        self.stat = (self.stat & 0xFC) | (mode & 0x03);
+        if mode != 3 {
+            let interrupt_enabled = match mode {
+                0 => self.stat & (1 << 3), // H-Blank
+                1 => self.stat & (1 << 4), // V-Blank
+                2 => self.stat & (1 << 5), // OAM search
+                _ => 0,
+            };
+
+            if interrupt_enabled != 0 {
+                if let Some(cpu) = &self.cpu {
+                    cpu.borrow_mut().request_interrupt(0b00000010);
+                }
+            }
+        }
+    }
+
+    pub fn get_screen_buffer(&self) -> Vec<u32> {
+        let mut buffer: Vec<u32> = Vec::with_capacity(160 * 144);
+        for y in 0..144 {
+            for x in 0..160 {
+                let pixel_color = self.screen_buffer[y][x];
+                buffer.push(pixel_color);
+            }
+        }
+        buffer
+    }
+
+    pub fn render_scanline(&mut self) {
+        self.render_background();
+        self.render_window();
+    }
+
     fn dma_transfer(&mut self, value: u8) {
         let source_address = (value as u16) << 8;
         if let Some(mmu) = &self.mmu {
@@ -103,31 +157,26 @@ impl PPU {
         }
     }
 
-    pub fn render_scanline(&mut self, ly: u8) {
-        self.render_background(ly);
-        self.render_window(ly);
-    }
-
-    fn render_background(&mut self, ly: u8) {
+    fn render_background(&mut self) {
         let tile_map_start: usize = if self.lcdc & 0x08 != 0 { 0x9C00 } else { 0x9800 };
         let tile_data_start: usize = if self.lcdc & 0x10 != 0 { 0x8000 } else { 0x8800 };
         
         let scy = self.scy;
         let scx = self.scx;
 
-        let y_offset = ((ly as u16 + scy as u16) & 0xFF) as u8;
+        let y_offset = ((self.ly as u16 + scy as u16) & 0xFF) as u8;
 
         for lx in 0..160 {
             let x_offset = ((lx as u16 + scx as u16) & 0xFF) as u8;
 
             let tile_col = x_offset / 8;
             let tile_row = y_offset / 8;
-            let tile_index = self.vram[tile_map_start + (tile_row as usize * 32) + tile_col as usize];
+            let tile_index = self.read_byte((tile_map_start + (tile_row as usize * 32) + tile_col as usize) as u16);
 
             let tile_data_address = tile_data_start + (tile_index as usize * 16);
             let pixel_row_in_tile = y_offset % 8;
-            let byte1 = self.vram[tile_data_address + pixel_row_in_tile as usize * 2];
-            let byte2 = self.vram[tile_data_address + pixel_row_in_tile as usize * 2 + 1];
+            let byte1 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2) as u16);
+            let byte2 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2 + 1) as u16);
 
             let pixel_column_in_tile = 7 - (x_offset % 8);
             let low_bit = (byte1 >> pixel_column_in_tile) & 1;
@@ -136,16 +185,16 @@ impl PPU {
 
             let color = self.get_bg_color(color_index);
 
-            self.screen_buffer[ly as usize][lx as usize] = color;
+            self.screen_buffer[self.ly as usize][lx as usize] = color;
         }
     }
 
-    fn render_window(&mut self, ly: u8) {
-        if self.lcdc & 0x20 != 0 && ly >= self.wy {
+    fn render_window(&mut self) {
+        if self.lcdc & 0x20 != 0 && self.ly >= self.wy {
             let tile_map_start: usize = if self.lcdc & 0x40 != 0 { 0x9C00 } else { 0x9800 };
             let tile_data_start: usize = if self.lcdc & 0x10 != 0 { 0x8000 } else { 0x8800 };
 
-            let window_y = ly - self.wy;
+            let window_y = self.ly - self.wy;
 
             for lx in 0..160 {
                 if lx + 7 >= self.wx {
@@ -153,12 +202,12 @@ impl PPU {
 
                     let tile_col = window_x / 8;
                     let tile_row = window_y / 8;
-                    let tile_index = self.vram[tile_map_start + (tile_row as usize * 32) + tile_col as usize];
+                    let tile_index = self.read_byte((tile_map_start + (tile_row as usize * 32) + tile_col as usize) as u16);
 
                     let tile_data_address = tile_data_start + (tile_index as usize * 16);
                     let pixel_row_in_tile = window_y % 8;
-                    let byte1 = self.vram[tile_data_address + pixel_row_in_tile as usize * 2];
-                    let byte2 = self.vram[tile_data_address + pixel_row_in_tile as usize * 2 + 1];
+                    let byte1 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2) as u16);
+                    let byte2 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2 + 1) as u16);
 
                     let pixel_column_in_tile = 7 - (window_x % 8);
                     let low_bit = (byte1 >> pixel_column_in_tile) & 1;
@@ -167,7 +216,7 @@ impl PPU {
 
                     let color = self.get_bg_color(color_index);
 
-                    self.screen_buffer[ly as usize][lx as usize] = color;
+                    self.screen_buffer[self.ly as usize][lx as usize] = color;
                 }
             }
         }
