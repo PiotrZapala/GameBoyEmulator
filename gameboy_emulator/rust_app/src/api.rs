@@ -13,7 +13,7 @@ lazy_static! {
 pub fn load_rom(rom_data: Vec<u8>) {
     let cartridge = CARTRIDGE::new(rom_data);
     let emulator = EMULATOR::new(cartridge);
-
+    
     let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
     *emulator_instance = Some(emulator);
 }
@@ -29,11 +29,11 @@ pub fn render_frame() -> Option<Vec<u32>> {
 }
 
 #[frb]
-pub fn load_rom_api(rom_data: Vec<u8>) {
+pub fn load(rom_data: Vec<u8>) {
     load_rom(rom_data);
 }
 
 #[frb]
-pub fn render_frame_api() -> Option<Vec<u32>> {
+pub fn render() -> Option<Vec<u32>> {
     render_frame()
 }
