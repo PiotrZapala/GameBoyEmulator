@@ -1,7 +1,10 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/router/app_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_app/router/app_router.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GamesPage extends StatefulWidget {
@@ -33,7 +36,12 @@ class _GamesPageState extends State<GamesPage> {
     prefs.setStringList('gameFiles', _gameFiles);
   }
 
-  Future<void> _pickGameFile() async {
+  Future<String> _getRomStoragePath() async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
+
+  Future<void> _pickAndSaveGameFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.any,
     );
@@ -41,19 +49,35 @@ class _GamesPageState extends State<GamesPage> {
     if (result != null) {
       String? filePath = result.files.single.path;
       if (filePath != null && !_gameFiles.contains(filePath)) {
+        String savedFilePath = await _saveRomToInternalStorage(filePath);
         setState(() {
-          _gameFiles.add(filePath);
+          _gameFiles.add(savedFilePath);
         });
         _saveGameFiles();
-        print("File added: $filePath");
+        print("File added and saved: $savedFilePath");
       }
     } else {
       print('No file selected');
     }
   }
 
-  void _openGame(String gamePath) {
-    context.router.push(GameRoute(gamePath: gamePath));
+  Future<String> _saveRomToInternalStorage(String filePath) async {
+    final storagePath = await _getRomStoragePath();
+    final fileName = filePath.split('/').last;
+    final newFilePath = '$storagePath/$fileName';
+    await File(filePath).copy(newFilePath);
+    return newFilePath;
+  }
+
+  Future<void> _openGame(String gamePath) async {
+    try {
+      File romFile = File(gamePath);
+      Uint8List romData = await romFile.readAsBytes();
+
+      context.router.push(GameRoute(romData: romData));
+    } catch (e) {
+      print("Błąd podczas odczytu ROM: $e");
+    }
   }
 
   String _formatGameName(String filePath) {
@@ -86,12 +110,11 @@ class _GamesPageState extends State<GamesPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onTap: () => context.router
-                        .push(GameRoute(gamePath: _gameFiles[index])));
+                    onTap: () => _openGame(_gameFiles[index]));
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _pickGameFile,
+        onPressed: _pickAndSaveGameFile,
         child: Icon(Icons.add),
       ),
     );
