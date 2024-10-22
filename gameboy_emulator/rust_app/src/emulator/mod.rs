@@ -1,5 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::cpu::CPU;
 use crate::ppu::PPU;
@@ -10,26 +9,32 @@ use crate::joypad::JOYPAD;
 use crate::cartridge::CARTRIDGE;
 
 pub struct EMULATOR {
-    joypad: Rc<RefCell<JOYPAD>>,
-    timer: Rc<RefCell<TIMER>>,
-    ppu: Rc<RefCell<PPU>>,
-    apu: Rc<RefCell<APU>>,
-    mmu: Rc<RefCell<MMU>>,
-    cpu: Rc<RefCell<CPU>>,
+    joypad: Arc<Mutex<JOYPAD>>,
+    timer: Arc<Mutex<TIMER>>,
+    ppu: Arc<Mutex<PPU>>,
+    apu: Arc<Mutex<APU>>,
+    mmu: Arc<Mutex<MMU>>,
+    cpu: Arc<Mutex<CPU>>,
 }
 
 impl EMULATOR {
     pub fn new(cartridge: CARTRIDGE) -> Self {
-        let timer = Rc::new(RefCell::new(TIMER::new()));
-        let ppu = Rc::new(RefCell::new(PPU::new()));
-        let apu = Rc::new(RefCell::new(APU::new()));
-        let joypad = Rc::new(RefCell::new(JOYPAD::new()));
-        let mmu = Rc::new(RefCell::new(MMU::new(Rc::clone(&joypad), Rc::clone(&timer), Rc::clone(&apu), Rc::clone(&ppu), cartridge)));
-        ppu.borrow_mut().set_mmu(Rc::clone(&mmu));
-        let cpu = Rc::new(RefCell::new(CPU::new(Rc::clone(&mmu))));
-        timer.borrow_mut().set_cpu(Rc::clone(&cpu));
-        joypad.borrow_mut().set_cpu(Rc::clone(&cpu));
-        ppu.borrow_mut().set_cpu(Rc::clone(&cpu));
+        let timer = Arc::new(Mutex::new(TIMER::new()));
+        let ppu = Arc::new(Mutex::new(PPU::new()));
+        let apu = Arc::new(Mutex::new(APU::new()));
+        let joypad = Arc::new(Mutex::new(JOYPAD::new()));
+        let mmu = Arc::new(Mutex::new(MMU::new(
+            Arc::clone(&joypad),
+            Arc::clone(&timer),
+            Arc::clone(&apu),
+            Arc::clone(&ppu),
+            cartridge,
+        )));
+        ppu.lock().unwrap().set_mmu(Arc::clone(&mmu));
+        let cpu = Arc::new(Mutex::new(CPU::new(Arc::clone(&mmu))));
+        timer.lock().unwrap().set_cpu(Arc::clone(&cpu));
+        joypad.lock().unwrap().set_cpu(Arc::clone(&cpu));
+        ppu.lock().unwrap().set_cpu(Arc::clone(&cpu));
 
         EMULATOR {
             joypad,
@@ -37,47 +42,93 @@ impl EMULATOR {
             ppu,
             apu,
             mmu,
-            cpu, 
+            cpu,
         }
     }
 
     pub fn run_cycles(&mut self, mut cycles_to_run: u32) {
         while cycles_to_run > 0 {
-            self.cpu.borrow_mut().tick();
-            let cycles_executed = self.cpu.borrow().get_cycles() as u16;
-            self.timer.borrow_mut().tick(cycles_executed);
+            let mut cpu = self.cpu.lock().unwrap();
+            cpu.tick();
+            let mut ppu = self.ppu.lock().unwrap();
+            ppu.dma_transfer();
+            let cycles_executed = cpu.get_cycles() as u16;
+            let mut timer = self.timer.lock().unwrap();
+            timer.tick(cycles_executed);
+
             cycles_to_run = cycles_to_run.saturating_sub(cycles_executed as u32);
         }
     }
 
     pub fn render_frame(&mut self) -> Vec<u32> {
+        let display_enabled;
+        {
+            let ppu = self.ppu.lock().unwrap();
+            display_enabled = ppu.is_display_enabled();
+        }
+    
+        if !display_enabled {
+            {
+                let mut ppu = self.ppu.lock().unwrap();
+                ppu.set_stat_mode(0);
+                ppu.set_ly(0);
+            }
+    
+            for _ in 0..154 {
+                self.run_cycles(456);
+            }
+    
+            return vec![0x00FFFFFF; 144 * 160];
+        }
+
         for ly in 0..144 {
-            self.ppu.borrow_mut().set_ly(ly);
-            
-            // Mode 2: OAM Search
-            self.ppu.borrow_mut().set_stat_mode(2);
+            {
+                let mut ppu = self.ppu.lock().unwrap();
+                ppu.set_ly(ly);
+                // Mode 2: OAM Search
+                ppu.set_stat_mode(2);
+            }
             self.run_cycles(80);
-
-            // Mode 3: Data transfer to LCD
-            self.ppu.borrow_mut().set_stat_mode(3);
+        
+            {
+                let mut ppu = self.ppu.lock().unwrap();
+                // Mode 3: Data transfer to LCD
+                ppu.set_stat_mode(3);
+            }
             self.run_cycles(170);
-
-            self.ppu.borrow_mut().render_scanline();
-
-            // Mode 0: HBLANK
-            self.ppu.borrow_mut().set_stat_mode(0);
+        
+            {
+                let mut ppu = self.ppu.lock().unwrap();
+                ppu.render_scanline();
+            }
+        
+            {
+                let mut ppu = self.ppu.lock().unwrap();
+                // Mode 0: HBLANK
+                ppu.set_stat_mode(0);
+            }
             self.run_cycles(206);
         }
-
+    
         // Mode 1: VBLANK
-        self.cpu.borrow_mut().request_interrupt(0b00000001);
-        self.ppu.borrow_mut().set_stat_mode(1);
-
+        {
+            let mut cpu = self.cpu.lock().unwrap();
+            cpu.request_interrupt(0b00000001);
+        }
+        
+        {
+            let mut ppu = self.ppu.lock().unwrap();
+            ppu.set_stat_mode(1);
+        }
+    
         for ly in 144..154 {
-            self.ppu.borrow_mut().set_ly(ly);
+            {
+                let mut ppu = self.ppu.lock().unwrap();
+                ppu.set_ly(ly);
+            }
             self.run_cycles(456);
         }
-
-        self.ppu.borrow().get_screen_buffer()
+        let ppu = self.ppu.lock().unwrap();
+        ppu.get_screen_buffer()
     }
 }

@@ -1,5 +1,4 @@
-use std::rc::Rc;
-use std::cell::RefCell;
+use std::sync::{Arc, Mutex};
 
 use crate::cpu::CPU;
 
@@ -10,7 +9,7 @@ pub struct TIMER {
     tac: u8,           // TAC (Timer Control)
     div_counter: u16,  // Counter for DIV
     tima_counter: u16, // Counter for TIMA
-    cpu: Option<Rc<RefCell<CPU>>>,
+    cpu: Option<Arc<Mutex<CPU>>>,
 }
 
 impl TIMER {
@@ -26,7 +25,7 @@ impl TIMER {
         }
     }
 
-    pub fn set_cpu(&mut self, cpu: Rc<RefCell<CPU>>) {
+    pub fn set_cpu(&mut self, cpu: Arc<Mutex<CPU>>) {
         self.cpu = Some(cpu);
     }
 
@@ -75,7 +74,7 @@ impl TIMER {
                 if self.tima == 0 {
                     self.tima = self.tma;
                     if let Some(ref cpu) = self.cpu {
-                        cpu.borrow_mut().request_interrupt(0b00000100);
+                        cpu.lock().unwrap().request_interrupt(0b00000100);
                     }
                 }
             }
