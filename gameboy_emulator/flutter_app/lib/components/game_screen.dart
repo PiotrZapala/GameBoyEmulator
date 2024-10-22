@@ -1,6 +1,10 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 class GameScreen extends StatelessWidget {
+  final Uint32List frameBuffer;
+  GameScreen({required this.frameBuffer});
+
   final int originalWidth = 160;
   final int originalHeight = 144;
 
@@ -23,27 +27,29 @@ class GameScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: CustomPaint(
-          painter: GameBoyScreenPainter(),
+          painter: GamePainter(frameBuffer, scale),
         ),
       ),
     );
   }
 }
 
-class GameBoyScreenPainter extends CustomPainter {
+class GamePainter extends CustomPainter {
+  final Uint32List frameBuffer;
+  final double scale;
+
+  GamePainter(this.frameBuffer, this.scale);
+
   @override
   void paint(Canvas canvas, Size size) {
-    List<List<Color>> pixelData = generateSamplePixels();
-    double pixelWidth = size.width / 160;
-    double pixelHeight = size.height / 144;
+    Paint paint = Paint();
 
     for (int y = 0; y < 144; y++) {
       for (int x = 0; x < 160; x++) {
-        Paint paint = Paint()..color = pixelData[y][x];
-
+        int color = frameBuffer[y * 160 + x];
+        paint.color = Color(color);
         canvas.drawRect(
-          Rect.fromLTWH(
-              x * pixelWidth, y * pixelHeight, pixelWidth, pixelHeight),
+          Rect.fromLTWH(x * scale, y * scale, scale, scale),
           paint,
         );
       }
@@ -51,21 +57,5 @@ class GameBoyScreenPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
-
-  List<List<Color>> generateSamplePixels() {
-    List<List<Color>> pixels = List.generate(
-      144,
-      (_) => List.generate(160, (_) => Colors.green),
-    );
-
-    for (int i = 0; i < 144; i++) {
-      for (int j = 0; j < 160; j++) {
-        pixels[i][j] = (i + j) % 2 == 0 ? Colors.black : Colors.white;
-      }
-    }
-    return pixels;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
