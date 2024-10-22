@@ -1,5 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::mmu::MMU;
 use crate::cpu::CPU;
@@ -19,9 +18,10 @@ pub struct PPU {
     wx: u8,           // Window X Position minus 7 (0xFF4B)
     vram: [u8; 8192], // Video RAM (0x8000 - 0x9FFF)
     oam: [u8; 160],   // Object Attribute Memory (0xFE00 - 0xFE9F)
+    dma_transfer_enabled: bool,
     screen_buffer: [[u32; 160]; 144], // Screen buffer
-    mmu: Option<Rc<RefCell<MMU>>>,
-    cpu: Option<Rc<RefCell<CPU>>>,
+    mmu: Option<Arc<Mutex<MMU>>>,
+    cpu: Option<Arc<Mutex<CPU>>>,
 }
 
 impl PPU {
@@ -41,6 +41,7 @@ impl PPU {
             wx: 0,
             vram: [0; 8192],
             oam: [0; 160],
+            dma_transfer_enabled: false,
             screen_buffer: [[0; 160]; 144],
             mmu: None,
             cpu: None,
@@ -71,14 +72,17 @@ impl PPU {
         match address {
             0x8000..=0x9FFF => self.vram[address as usize - 0x8000] = value,
             0xFE00..=0xFE9F => self.oam[address as usize - 0xFE00] = value,
-            0xFF40 => self.lcdc = value,
+            0xFF40 => {
+                self.lcdc = value;
+            },
             0xFF41 => self.stat = value,
             0xFF42 => self.scy = value,
             0xFF43 => self.scx = value,
+            0xFF44 => self.ly = value,
             0xFF45 => self.lyc = value,
             0xFF46 => {
                 self.dma = value;
-                self.dma_transfer(value);
+                self.dma_transfer_enabled = true;
             },
             0xFF47 => self.bgp = value,
             0xFF48 => self.obp0 = value,
@@ -89,11 +93,15 @@ impl PPU {
         }
     }
 
-    pub fn set_mmu(&mut self, mmu: Rc<RefCell<MMU>>) {
+    pub fn is_display_enabled(&self) -> bool {
+        (self.lcdc & 0x80) != 0
+    }
+
+    pub fn set_mmu(&mut self, mmu: Arc<Mutex<MMU>>) {
         self.mmu = Some(mmu);
     }
 
-    pub fn set_cpu(&mut self, cpu: Rc<RefCell<CPU>>) {
+    pub fn set_cpu(&mut self, cpu: Arc<Mutex<CPU>>) {
         self.cpu = Some(cpu);
     }
 
@@ -103,7 +111,7 @@ impl PPU {
             self.stat |= 0x04;
             if self.stat & 0x40 != 0 {
                 if let Some(cpu) = &self.cpu {
-                    cpu.borrow_mut().request_interrupt(0b00000010);
+                    cpu.lock().unwrap().request_interrupt(0b00000010);
                 }
             }
         } else {
@@ -123,7 +131,7 @@ impl PPU {
 
             if interrupt_enabled != 0 {
                 if let Some(cpu) = &self.cpu {
-                    cpu.borrow_mut().request_interrupt(0b00000010);
+                    cpu.lock().unwrap().request_interrupt(0b00000010);
                 }
             }
         }
@@ -140,21 +148,25 @@ impl PPU {
         buffer
     }
 
+    pub fn dma_transfer(&mut self) {
+        if self.dma_transfer_enabled {
+            let source_address = (self.dma as u16) << 8;
+            if let Some(mmu) = &self.mmu {
+                for i in 0..0xA0 {
+                    let byte = mmu.lock().unwrap().read_byte(source_address + i as u16);
+                    self.oam[i] = byte;
+                }
+            } else {
+                panic!("PPU has no reference to MMU.");
+            }
+        }
+        self.dma_transfer_enabled = false;
+    }
+
     pub fn render_scanline(&mut self) {
         self.render_background();
         self.render_window();
-    }
-
-    fn dma_transfer(&mut self, value: u8) {
-        let source_address = (value as u16) << 8;
-        if let Some(mmu) = &self.mmu {
-            for i in 0..0xA0 {
-                let byte = mmu.borrow().read_byte(source_address + i as u16);
-                self.oam[i] = byte;
-            }
-        } else {
-            panic!("PPU has no reference to MMU.");
-        }
+        self.render_sprites();
     }
 
     fn render_background(&mut self) {
@@ -222,16 +234,96 @@ impl PPU {
         }
     }
 
+    fn render_sprites(&mut self) {
+        let mut sprite_count = 0;
+
+        for sprite_index in 0..40 {
+            if sprite_count >= 10 {
+                break;
+            }
+
+            let sprite_y = self.oam[sprite_index * 4] as i16 - 16;
+            let sprite_x = self.oam[sprite_index * 4 + 1] as i16 - 8;
+            let tile_index = self.oam[sprite_index * 4 + 2];
+            let attributes = self.oam[sprite_index * 4 + 3];
+
+            let sprite_size = if self.lcdc & 0x04 != 0 { 16 } else { 8 };
+
+            if sprite_y <= self.ly as i16 && (sprite_y + sprite_size as i16) > self.ly as i16 {
+
+                let y_flip = attributes & 0x40 != 0;
+                let x_flip = attributes & 0x20 != 0;
+
+                let palette_index = if attributes & 0x10 != 0 { 1 } else { 0 };
+
+                let sprite_row = if y_flip {
+                    sprite_size - 1 - (self.ly as i16 - sprite_y) as u8
+                } else {
+                    (self.ly as i16 - sprite_y) as u8
+                };
+
+                for lx in 0..8 {
+                    let sprite_col = if x_flip { 7 - lx } else { lx };
+                    let tile_line = self.get_tile_data(tile_index, sprite_row, sprite_col);
+
+                    if tile_line != 0 {
+                        let color = self.get_sprite_color(tile_line, palette_index);
+
+                        let pixel_x = sprite_x + lx as i16;
+                        if pixel_x >= 0 && pixel_x < 160 {
+                            let priority = attributes & 0x80 == 0;
+                            let bg_pixel = self.screen_buffer[self.ly as usize][pixel_x as usize];
+                            if priority || bg_pixel == 0x00FFFFFF {
+                                self.screen_buffer[self.ly as usize][pixel_x as usize] = color;
+                            }
+                        }
+                    }
+                }
+                sprite_count += 1;
+            }
+        }
+    }
+
+    fn get_tile_data(&self, tile_index: u8, row: u8, col: u8) -> u8 {
+        let tile_data_base = if self.lcdc & 0x10 != 0 { 0x8000 } else { 0x8800 };
+        let tile_address = tile_data_base + tile_index as usize * 16;
+    
+        let byte1 = self.read_byte((tile_address + row as usize * 2) as u16);
+        let byte2 = self.read_byte((tile_address + row as usize * 2 + 1) as u16);
+    
+        let bit = 7 - col;
+        let low_bit = (byte1 >> bit) & 1;
+        let high_bit = (byte2 >> bit) & 1;
+        let result = (high_bit << 1) | low_bit;
+    
+        result
+    }
+
     fn get_bg_color(&self, color_index: u8) -> u32 {
         let palette = self.bgp;
         let shade = (palette >> (color_index * 2)) & 0x03;
 
-        match shade {
-            0 => 0xFFFFFFFF, // White
-            1 => 0xAAAAAAFF, // Light grey
-            2 => 0x555555FF, // Dark grey
-            3 => 0x000000FF, // Black
-            _ => 0x000000FF, 
-        }
+        let color = match shade {
+            0 => 0x00FFFFFF, // White (0RGB: 00FF FF FF)
+            1 => 0x00AAAAAA, // Light grey (0RGB: 00AA AA AA)
+            2 => 0x00555555, // Dark grey (0RGB: 0055 55 55)
+            3 => 0x00000000, // Black (0RGB: 0000 00 00)
+            _ => 0x00000000, // Default to black
+        };
+        color
+    }
+
+    fn get_sprite_color(&self, color_index: u8, palette_index: u8) -> u32 {
+        let palette = if palette_index == 0 { self.obp0 } else { self.obp1 };
+        let shade = (palette >> (color_index * 2)) & 0x03;
+    
+        let color = match shade {
+            0 => 0x000000FF, // Transparent (0RGB: 00FF FF FF)
+            1 => 0x00AAAAAA, // Light grey (0RGB: 00AA AA AA)
+            2 => 0x00555555, // Dark grey (0RGB: 0055 55 55)
+            3 => 0x00000000, // Black (0RGB: 0000 00 00)
+            _ => 0x00000000, // Default to black
+        };
+        color
     }
 }
