@@ -1,11 +1,10 @@
-use std::rc::Rc;
-use std::cell::RefCell;
+use std::sync::{Arc, Mutex};
 
 use crate::cpu::CPU;
 
 pub struct JOYPAD {
     joy: u8,  // Joypad register (0xFF00), holding the button state and selected button group
-    cpu: Option<Rc<RefCell<CPU>>>,
+    cpu: Option<Arc<Mutex<CPU>>>,
 }
 
 impl JOYPAD {
@@ -16,7 +15,7 @@ impl JOYPAD {
         }
     }
 
-    pub fn set_cpu(&mut self, cpu: Rc<RefCell<CPU>>) {
+    pub fn set_cpu(&mut self, cpu: Arc<Mutex<CPU>>) {
         self.cpu = Some(cpu);
     }
 
@@ -62,7 +61,8 @@ impl JOYPAD {
             if !was_pressed {
                 self.joy &= !(1 << bit_position);
                 if let Some(ref cpu) = self.cpu {
-                    cpu.borrow_mut().request_interrupt(0b00010000);
+                    let mut cpu = cpu.lock().unwrap();
+                    cpu.request_interrupt(0b00010000);
                 }
             }
         }
