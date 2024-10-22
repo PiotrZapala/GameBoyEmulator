@@ -33,7 +33,7 @@ class _$AppRouter extends RootStackRouter {
       final args = routeData.argsAs<GameRouteArgs>();
       return MaterialPageX<dynamic>(
         routeData: routeData,
-        child: GamePage(gamePath: args.gamePath),
+        child: GamePage(romData: args.romData),
       );
     },
   };
@@ -82,23 +82,23 @@ class GamesRoute extends PageRouteInfo<void> {
 /// generated route for
 /// [GamePage]
 class GameRoute extends PageRouteInfo<GameRouteArgs> {
-  GameRoute({required String gamePath})
+  GameRoute({required Uint8List romData})
       : super(
           GameRoute.name,
           path: '/game-page',
-          args: GameRouteArgs(gamePath: gamePath),
+          args: GameRouteArgs(romData: romData),
         );
 
   static const String name = 'GameRoute';
 }
 
 class GameRouteArgs {
-  const GameRouteArgs({required this.gamePath});
+  const GameRouteArgs({required this.romData});
 
-  final String gamePath;
+  final Uint8List romData;
 
   @override
   String toString() {
-    return 'GameRouteArgs{gamePath: $gamePath}';
+    return 'GameRouteArgs{romData: $romData}';
   }
 }
