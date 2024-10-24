@@ -11,23 +11,27 @@ class GameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double scale = screenWidth * 0.7 / originalWidth;
+    double scale = screenWidth * 0.8 / originalWidth;
 
     double finalWidth = originalWidth * scale;
     double finalHeight = originalHeight * scale;
 
-    return Align(
-      alignment: Alignment.topCenter,
+    return Center(
       child: Container(
-        width: finalWidth,
-        height: finalHeight,
         decoration: BoxDecoration(
           color: Colors.black,
           border: Border.all(color: Colors.grey, width: 4),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: CustomPaint(
-          painter: GamePainter(frameBuffer, scale),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: SizedBox(
+            width: finalWidth,
+            height: finalHeight,
+            child: CustomPaint(
+              painter: GamePainter(frameBuffer, scale),
+            ),
+          ),
         ),
       ),
     );
@@ -47,7 +51,7 @@ class GamePainter extends CustomPainter {
     for (int y = 0; y < 144; y++) {
       for (int x = 0; x < 160; x++) {
         int color = frameBuffer[y * 160 + x];
-        paint.color = Color(color);
+        paint.color = Color(0xFF000000 | color);
         canvas.drawRect(
           Rect.fromLTWH(x * scale, y * scale, scale, scale),
           paint,
