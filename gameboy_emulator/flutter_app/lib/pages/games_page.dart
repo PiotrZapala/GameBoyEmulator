@@ -54,7 +54,6 @@ class _GamesPageState extends State<GamesPage> {
           _gameFiles.add(savedFilePath);
         });
         _saveGameFiles();
-        print("File added and saved: $savedFilePath");
       }
     } else {
       print('No file selected');
@@ -73,8 +72,9 @@ class _GamesPageState extends State<GamesPage> {
     try {
       File romFile = File(gamePath);
       Uint8List romData = await romFile.readAsBytes();
+      String gameName = _formatGameName(gamePath);
 
-      context.router.push(GameRoute(romData: romData));
+      context.router.push(GameRoute(romData: romData, gameName: gameName));
     } catch (e) {
       print("Błąd podczas odczytu ROM: $e");
     }
@@ -91,28 +91,80 @@ class _GamesPageState extends State<GamesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Games'),
-      ),
-      body: _gameFiles.isEmpty
-          ? Center(
-              child: Text('No games added'),
-            )
-          : ListView.builder(
-              itemCount: _gameFiles.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                    leading: Icon(Icons.videogame_asset),
-                    title: Text(
-                      _formatGameName(_gameFiles[index]),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/backgrounds/app_background.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.videogame_asset, size: 36, color: Colors.white),
+                    SizedBox(width: 10),
+                    Text(
+                      'Games',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    onTap: () => _openGame(_gameFiles[index]));
-              },
+                  ],
+                ),
+              ),
             ),
+          ),
+          Positioned.fill(
+            child: Column(
+              children: [
+                SizedBox(height: 50),
+                Expanded(
+                  child: _gameFiles.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No games added',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _gameFiles.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              leading: Icon(Icons.videogame_asset,
+                                  color: Colors.white),
+                              title: Text(
+                                _formatGameName(_gameFiles[index]),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onTap: () => _openGame(_gameFiles[index]),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _pickAndSaveGameFile,
         child: Icon(Icons.add),
