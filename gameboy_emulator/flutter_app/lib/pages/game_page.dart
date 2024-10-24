@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/bridge_definitions.dart';
 import 'package:flutter_app/components/game_screen.dart';
-import 'dart:ffi';
+import 'dart:ffi' as ffi;
 import 'dart:io' show Platform;
 import 'package:flutter_app/bridge_generated.dart';
 
 class GamePage extends StatefulWidget {
   final Uint8List romData;
+  final String gameName;
 
-  GamePage({required this.romData});
+  GamePage({required this.romData, required this.gameName});
 
   @override
   _GamePageState createState() => _GamePageState();
@@ -25,18 +25,28 @@ class _GamePageState extends State<GamePage> {
   bool _isRunning = false;
   bool _isLoaded = false;
 
+  Map<String, bool> _buttonStates = {
+    "Up": true,
+    "Down": true,
+    "Left": true,
+    "Right": true,
+    "A": true,
+    "B": true,
+    "Start": true,
+    "Select": true,
+  };
+
   @override
   void initState() {
     super.initState();
     api = RustAppImpl(Platform.isIOS
-        ? DynamicLibrary.process()
-        : DynamicLibrary.open('librust_app.so'));
+        ? ffi.DynamicLibrary.process()
+        : ffi.DynamicLibrary.open('librust_app.so'));
     _loadGame();
   }
 
   Future<void> _loadGame() async {
     try {
-      print("ROM Data Length: ${widget.romData.length}");
       await api.load(romData: widget.romData);
       setState(() {
         _isLoaded = true;
@@ -64,18 +74,42 @@ class _GamePageState extends State<GamePage> {
     _timer = Timer.periodic(frameDuration, (timer) async {
       if (_isRunning) {
         try {
+          Uint8List buttonStates = _getButtonStates();
+
           final frame = await api.render();
-          print('Frame received: $frame');
+
+          await api.setButtons(buttonStates: buttonStates);
+
           if (frame != null) {
             setState(() {
               _frameBuffer = Uint32List.fromList(frame);
             });
           }
+
+          await api.handleVblank();
         } catch (e) {
           print('Błąd podczas renderowania klatki: $e');
         }
       }
     });
+  }
+
+  void _handleButtonPress(String button) {
+    setState(() {
+      _buttonStates[button] = false;
+    });
+  }
+
+  void _handleButtonRelease(String button) {
+    setState(() {
+      _buttonStates[button] = true;
+    });
+  }
+
+  Uint8List _getButtonStates() {
+    return Uint8List.fromList(
+      _buttonStates.values.map((state) => state ? 1 : 0).toList(),
+    );
   }
 
   @override
@@ -86,11 +120,17 @@ class _GamePageState extends State<GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    String gameName = "Loaded Game";
+    String gameName = widget.gameName;
 
     return Scaffold(
       body: Stack(
         children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/backgrounds/app_background.png',
+              fit: BoxFit.cover,
+            ),
+          ),
           Column(
             children: [
               SizedBox(height: 60),
@@ -100,6 +140,7 @@ class _GamePageState extends State<GamePage> {
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2.0,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: 20),
@@ -111,7 +152,16 @@ class _GamePageState extends State<GamePage> {
               if (_isLoaded && !_isRunning)
                 ElevatedButton(
                   onPressed: _startEmulator,
-                  child: Text('Start Emulator'),
+                  child: Text(
+                    'Start Emulator',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                  ),
                 ),
             ],
           ),
@@ -119,10 +169,158 @@ class _GamePageState extends State<GamePage> {
             top: 30,
             left: 10,
             child: IconButton(
-                icon: Icon(Icons.arrow_back, size: 30),
-                onPressed: () => context.router.pop()),
+                icon: Icon(Icons.arrow_back, size: 30, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop()),
+          ),
+          Positioned(
+            bottom: 40,
+            left: MediaQuery.of(context).size.width / 4,
+            right: MediaQuery.of(context).size.width / 4,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                GestureDetector(
+                  onTapDown: (_) => _handleButtonPress("Start"),
+                  onTapUp: (_) => _handleButtonRelease("Start"),
+                  onTapCancel: () => _handleButtonRelease("Start"),
+                  child: _buildTransparentButton("Start"),
+                ),
+                GestureDetector(
+                  onTapDown: (_) => _handleButtonPress("Select"),
+                  onTapUp: (_) => _handleButtonRelease("Select"),
+                  onTapCancel: () => _handleButtonRelease("Select"),
+                  child: _buildTransparentButton("Select"),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 140,
+            right: 40,
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTapDown: (_) => _handleButtonPress("A"),
+                  onTapUp: (_) => _handleButtonRelease("A"),
+                  onTapCancel: () => _handleButtonRelease("A"),
+                  child: _buildCircularButton("A"),
+                ),
+                SizedBox(height: 15),
+                GestureDetector(
+                  onTapDown: (_) => _handleButtonPress("B"),
+                  onTapUp: (_) => _handleButtonRelease("B"),
+                  onTapCancel: () => _handleButtonRelease("B"),
+                  child: _buildCircularButton("B"),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 140,
+            left: 40,
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTapDown: (_) => _handleButtonPress("Up"),
+                  onTapUp: (_) => _handleButtonRelease("Up"),
+                  onTapCancel: () => _handleButtonRelease("Up"),
+                  child: _buildArrowButton(Icons.arrow_upward, "Up"),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTapDown: (_) => _handleButtonPress("Left"),
+                      onTapUp: (_) => _handleButtonRelease("Left"),
+                      onTapCancel: () => _handleButtonRelease("Left"),
+                      child: _buildArrowButton(Icons.arrow_back, "Left"),
+                    ),
+                    SizedBox(width: 10),
+                    GestureDetector(
+                      onTapDown: (_) => _handleButtonPress("Right"),
+                      onTapUp: (_) => _handleButtonRelease("Right"),
+                      onTapCancel: () => _handleButtonRelease("Right"),
+                      child: _buildArrowButton(Icons.arrow_forward, "Right"),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTapDown: (_) => _handleButtonPress("Down"),
+                  onTapUp: (_) => _handleButtonRelease("Down"),
+                  onTapCancel: () => _handleButtonRelease("Down"),
+                  child: _buildArrowButton(Icons.arrow_downward, "Down"),
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTransparentButton(String label) {
+    return SizedBox(
+      width: 70,
+      height: 30,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircularButton(String label) {
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArrowButton(IconData icon, String direction) {
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
       ),
     );
   }
