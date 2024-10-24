@@ -1,17 +1,22 @@
 use std::sync::{Arc, Mutex};
-
 use crate::cpu::CPU;
 
 pub struct JOYPAD {
-    joy: u8,  // Joypad register (0xFF00), holding the button state and selected button group
+    buttons: u8,             
+    select_direction_keys: bool,
+    select_action_keys: bool,    
+    previous_buttons: u8,       
     cpu: Option<Arc<Mutex<CPU>>>,
 }
 
 impl JOYPAD {
     pub fn new() -> Self {
         JOYPAD {
-            joy: 0xFF,
-            cpu: None,
+            buttons: 0xFF,              
+            select_direction_keys: true, 
+            select_action_keys: true,    
+            previous_buttons: 0xFF,      
+            cpu: None,                  
         }
     }
 
@@ -20,61 +25,52 @@ impl JOYPAD {
     }
 
     pub fn read_byte(&self) -> u8 {
-        self.joy
+        let mut result = 0xFF;
+
+        if !self.select_direction_keys {
+            result &= self.buttons | 0xF0;
+            result &= 0b11101111;
+        }
+
+        if !self.select_action_keys {
+            result &= (self.buttons >> 4) | 0xF0;
+            result &= 0b11011111;
+        }
+
+        result
     }
 
     pub fn write_byte(&mut self, value: u8) {
-        self.joy = (self.joy & 0x0F) | (value & 0xF0);
+        self.select_direction_keys = (value & 0x20) == 0;
+        self.select_action_keys = (value & 0x10) == 0;
     }
 
-    pub fn press_button(&mut self, button: &str) {
-        match button {
-            "A" => self.handle_press(0, 0x10),
-            "B" => self.handle_press(1, 0x10),
-            "Select" => self.handle_press(2, 0x10),
-            "Start" => self.handle_press(3, 0x10),
-            "Right" => self.handle_press(0, 0x20),
-            "Left" => self.handle_press(1, 0x20),
-            "Up" => self.handle_press(2, 0x20),
-            "Down" => self.handle_press(3, 0x20),
-            _ => (),
+    pub fn set_button_state(&mut self, button: u8, pressed: bool) {
+        if pressed {
+            self.buttons &= !button;
+        } else {
+            self.buttons |= button;
         }
     }
 
-    pub fn release_button(&mut self, button: &str) {
-        match button {
-            "A" => self.handle_release(0, 0x10),
-            "B" => self.handle_release(1, 0x10),
-            "Select" => self.handle_release(2, 0x10),
-            "Start" => self.handle_release(3, 0x10),
-            "Right" => self.handle_release(0, 0x20),
-            "Left" => self.handle_release(1, 0x20),
-            "Up" => self.handle_release(2, 0x20),
-            "Down" => self.handle_release(3, 0x20),
-            _ => (),
+    pub fn joypad_state_has_changed(&mut self) -> bool {
+        let changed = self.buttons != self.previous_buttons;
+        if changed {
+            self.previous_buttons = self.buttons;
         }
+        changed
     }
 
-    fn handle_press(&mut self, bit_position: u8, group_bit: u8) {
-        if self.is_group_selected(group_bit) {
-            let was_pressed = self.joy & (1 << bit_position) == 0;
-            if !was_pressed {
-                self.joy &= !(1 << bit_position);
-                if let Some(ref cpu) = self.cpu {
-                    let mut cpu = cpu.lock().unwrap();
-                    cpu.request_interrupt(0b00010000);
-                }
+    pub fn is_any_group_active(&self) -> bool {
+        !self.select_direction_keys || !self.select_action_keys
+    }
+
+    pub fn check_for_interrupt(&mut self) {
+        if self.joypad_state_has_changed() && self.is_any_group_active() {
+            if let Some(ref cpu) = self.cpu {
+                let mut cpu_locked = cpu.lock().unwrap();
+                cpu_locked.request_interrupt(0b00010000);
             }
         }
-    }
-
-    fn handle_release(&mut self, bit_position: u8, group_bit: u8) {
-        if self.is_group_selected(group_bit) {
-            self.joy |= 1 << bit_position;
-        }
-    }
-
-    fn is_group_selected(&self, group_bit: u8) -> bool {
-        self.joy & group_bit == 0
     }
 }
