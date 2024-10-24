@@ -3,12 +3,11 @@ name = "rust_app"
 version = "0.1.0"
 edition = "2021"
 
-#[lib]
-#name = "rust_app"
-#crate-type = ["staticlib", "cdylib"]
+[lib]
+name = "rust_app"
+crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-minifb = "0.19"
-#flutter_rust_bridge = "=1.80.0"
-#flutter_rust_bridge_macros = "=1.80.0"
-#lazy_static = "1.4.0"
+flutter_rust_bridge = "=1.80.0"
+flutter_rust_bridge_macros = "=1.80.0"
+lazy_static = "1.4.0"
