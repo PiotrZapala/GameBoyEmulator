@@ -9,12 +9,13 @@ use crate::joypad::JOYPAD;
 use crate::cartridge::CARTRIDGE;
 
 pub struct EMULATOR {
-    joypad: Arc<Mutex<JOYPAD>>,
+    pub joypad: Arc<Mutex<JOYPAD>>,
     timer: Arc<Mutex<TIMER>>,
     ppu: Arc<Mutex<PPU>>,
     apu: Arc<Mutex<APU>>,
     mmu: Arc<Mutex<MMU>>,
     cpu: Arc<Mutex<CPU>>,
+    is_vblank: bool,
 }
 
 impl EMULATOR {
@@ -43,6 +44,7 @@ impl EMULATOR {
             apu,
             mmu,
             cpu,
+            is_vblank: false,
         }
     }
 
@@ -50,13 +52,48 @@ impl EMULATOR {
         while cycles_to_run > 0 {
             let mut cpu = self.cpu.lock().unwrap();
             cpu.tick();
+            let cycles_executed = cpu.get_cycles() as u16;
+            drop(cpu);
             let mut ppu = self.ppu.lock().unwrap();
             ppu.dma_transfer();
-            let cycles_executed = cpu.get_cycles() as u16;
+            drop(ppu);
             let mut timer = self.timer.lock().unwrap();
-            timer.tick(cycles_executed);
-
+            timer.tick(cycles_executed);       
+            drop(timer);
+            self.check_buttons();
             cycles_to_run = cycles_to_run.saturating_sub(cycles_executed as u32);
+        }
+    } 
+
+    pub fn set_button_states(&mut self, up: u8, down: u8, left: u8, right: u8, a: u8, b: u8, start: u8, select: u8) {
+        let mut joypad = self.joypad.lock().unwrap();
+        joypad.set_button_state(0b00000100, up == 0);      // Up
+        joypad.set_button_state(0b00001000, down == 0);    // Down
+        joypad.set_button_state(0b00000010, left == 0);    // Left
+        joypad.set_button_state(0b00000001, right == 0);   // Right
+        joypad.set_button_state(0b00010000, a == 0);       // A
+        joypad.set_button_state(0b00100000, b == 0);       // B
+        joypad.set_button_state(0b10000000, start == 0);   // Start
+        joypad.set_button_state(0b01000000, select == 0);  // Select
+    }
+
+    pub fn check_buttons(&mut self) {
+        self.is_vblank = true;
+        if self.is_vblank {
+            let mut joypad = self.joypad.lock().unwrap();
+            joypad.check_for_interrupt();
+        }
+        self.is_vblank = false;
+    }
+
+    pub fn handle_vblank(&mut self) {
+        for ly in 144..154 {
+            {
+                let mut ppu = self.ppu.lock().unwrap();
+                ppu.set_stat_mode(1);
+                ppu.set_ly(ly);
+            }
+            self.run_cycles(456);
         }
     }
 
@@ -82,29 +119,30 @@ impl EMULATOR {
         }
 
         for ly in 0..144 {
+
+            // Mode 2: OAM Search
             {
                 let mut ppu = self.ppu.lock().unwrap();
                 ppu.set_ly(ly);
-                // Mode 2: OAM Search
                 ppu.set_stat_mode(2);
             }
             self.run_cycles(80);
-        
+    
+            // Mode 3: Data transfer to LCD
             {
                 let mut ppu = self.ppu.lock().unwrap();
-                // Mode 3: Data transfer to LCD
                 ppu.set_stat_mode(3);
             }
             self.run_cycles(170);
-        
+    
             {
                 let mut ppu = self.ppu.lock().unwrap();
                 ppu.render_scanline();
             }
-        
+    
+            // Mode 0: HBLANK
             {
                 let mut ppu = self.ppu.lock().unwrap();
-                // Mode 0: HBLANK
                 ppu.set_stat_mode(0);
             }
             self.run_cycles(206);
@@ -115,20 +153,9 @@ impl EMULATOR {
             let mut cpu = self.cpu.lock().unwrap();
             cpu.request_interrupt(0b00000001);
         }
-        
-        {
-            let mut ppu = self.ppu.lock().unwrap();
-            ppu.set_stat_mode(1);
-        }
     
-        for ly in 144..154 {
-            {
-                let mut ppu = self.ppu.lock().unwrap();
-                ppu.set_ly(ly);
-            }
-            self.run_cycles(456);
-        }
         let ppu = self.ppu.lock().unwrap();
         ppu.get_screen_buffer()
     }
+    
 }
