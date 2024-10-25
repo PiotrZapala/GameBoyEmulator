@@ -1,11 +1,9 @@
 mod instructions;
 
 use crate::mmu::MMU;
-use crate::timer::TIMER;
 use instructions::*;
 
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 pub enum INTERRUPT_ADDRESS {
     VBlank = 0x0040,   // Address for Vertical Blank interrupt
@@ -65,13 +63,12 @@ pub struct CPU {
     pub sp: u16,                   // Stack Pointer. Points to the top of the stack.
     pub ime: bool,                 // Interrupt Master Enable flag. Controls the global interrupt enable/disable state.
     pub halted: bool,              // Halt flag. Indicates if the CPU is in a halted state, waiting for an interrupt.
-    pub mmu: Rc<RefCell<MMU>>,     // Memory Management Unit. Manages access to different memory regions.
-    pub timer: Rc<RefCell<TIMER>>, // Timer. Manages the CPU's timing and counting operations.
+    pub cycles: u16,               // Cycles number. Stores the number of cycles executed by the last instruction.
+    pub mmu: Arc<Mutex<MMU>>,      // Memory Management Unit. Manages access to different memory regions.
 }
 
-
 impl CPU {
-    pub fn new(mmu: Rc<RefCell<MMU>>, timer: Rc<RefCell<TIMER>>) -> Self {
+    pub fn new(mmu: Arc<Mutex<MMU>>) -> Self {
         CPU {
             a: 0,
             b: 0,
@@ -85,14 +82,14 @@ impl CPU {
             sp: 0,
             ime: false,
             halted: false,
+            cycles: 0,
             mmu,
-            timer,
         }
     }
 
     pub fn tick(&mut self) {
         self.handle_interrupts();
-        let opcode = self.mmu.borrow().fetch_instruction(self.pc);
+        let opcode = self.mmu.lock().unwrap().fetch_instruction(self.pc);
         self.execute(opcode);
     }
 
@@ -101,9 +98,24 @@ impl CPU {
             self.execute_not_prefixed_instruction(opcode);
         } else {
             self.pc += 1;
-            let new_opcode = self.mmu.borrow().fetch_instruction(self.pc);
+            let new_opcode = self.mmu.lock().unwrap().fetch_instruction(self.pc);
             self.execute_prefixed_instruction(new_opcode);
         }
+    }
+
+    pub fn set_cycles(&mut self, cycles: u16) {
+        self.cycles = cycles;
+    }
+
+    pub fn get_cycles(&self) -> u16 {
+        self.cycles
+    }
+
+    pub fn request_interrupt(&mut self, interrupt: u8) {
+        let mut mmu = self.mmu.lock().unwrap();
+        let current_interrupt_flag = mmu.read_byte(0xFF0F);
+        let new_interrupt_flag = current_interrupt_flag | interrupt;
+        mmu.write_byte(0xFF0F, new_interrupt_flag);
     }
 
     fn handle_interrupts(&mut self) -> bool {
@@ -111,42 +123,44 @@ impl CPU {
             return false;
         } 
 
-        let interrupt_flag = self.mmu.borrow().read_byte(0xFF0F);
-        let interrupt_enable = self.mmu.borrow().read_byte(0xFFFF);
-        let is_enabled_interrupts =  interrupt_flag & interrupt_enable & 0b00011111;
+        let mut mmu = self.mmu.lock().unwrap();
+        let interrupt_flag = mmu.read_byte(0xFF0F);
+        let interrupt_enable = mmu.read_byte(0xFFFF);
+        let is_enabled_interrupts = interrupt_flag & interrupt_enable & 0b00011111;
 
         if is_enabled_interrupts == 0 {
             return false;
         }
 
         self.sp -= 2;
-        self.mmu.borrow_mut().write_byte(self.sp + 1, (self.pc >> 8) as u8);
-        self.mmu.borrow_mut().write_byte(self.sp, (self.pc & 0xFF) as u8);
+        mmu.write_byte(self.sp + 1, (self.pc >> 8) as u8);
+        mmu.write_byte(self.sp, (self.pc & 0xFF) as u8);
 
         if interrupt_flag & INTERRUPT_FLAG::VBlank.value() != 0 {
-            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::VBlank.value());
+            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::VBlank.value());
             self.pc = INTERRUPT_ADDRESS::VBlank.address();
             self.ime = false;
         } else if interrupt_flag & INTERRUPT_FLAG::LCDStat.value() != 0 {
-            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::LCDStat.value());
+            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::LCDStat.value());
             self.pc = INTERRUPT_ADDRESS::LCDStat.address();
             self.ime = false;
         } else if interrupt_flag & INTERRUPT_FLAG::Timer.value() != 0 {
-            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Timer.value());
+            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Timer.value());
             self.pc = INTERRUPT_ADDRESS::Timer.address();
             self.ime = false;
         } else if interrupt_flag & INTERRUPT_FLAG::Serial.value() != 0 {
-            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Serial.value());
+            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Serial.value());
             self.pc = INTERRUPT_ADDRESS::Serial.address();
             self.ime = false;
         } else if interrupt_flag & INTERRUPT_FLAG::Joypad.value() != 0 {
-            self.mmu.borrow_mut().write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Joypad.value());
+            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Joypad.value());
             self.pc = INTERRUPT_ADDRESS::Joypad.address();
             self.ime = false;
         }
 
-        return true;
+        true
     }
+
 
     fn update_flags(&mut self, zero: Option<bool>, carry: Option<bool>, negative: Option<bool>, half_carry: Option<bool>) {
         if let Some(z) = zero {

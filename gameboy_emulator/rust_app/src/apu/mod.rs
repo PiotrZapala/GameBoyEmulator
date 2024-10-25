@@ -16,6 +16,9 @@ pub struct APU {
     nr33: u8, // 0xFF1D - NR33: Channel 3 Frequency Low
     nr34: u8, // 0xFF1E - NR34: Channel 3 Frequency High
 
+    single_memory_cell1: u8,
+    single_memory_cell2: u8,
+
     nr41: u8, // 0xFF20 - NR41: Channel 4 Sound Length
     nr42: u8, // 0xFF21 - NR42: Channel 4 Volume Envelope
     nr43: u8, // 0xFF22 - NR43: Channel 4 Polynomial Counter
@@ -25,6 +28,7 @@ pub struct APU {
     nr51: u8, // 0xFF25 - NR51: Selection of Sound Output Terminal
     nr52: u8, // 0xFF26 - NR52: Sound On/Off
 
+    io: [u8; 9],
     wave_pattern_ram: [u8; 16],
 }
 
@@ -45,6 +49,8 @@ impl APU {
             nr32: 0,
             nr33: 0,
             nr34: 0,
+            single_memory_cell1: 0,
+            single_memory_cell2: 0,
             nr41: 0,
             nr42: 0,
             nr43: 0,
@@ -52,6 +58,7 @@ impl APU {
             nr50: 0,
             nr51: 0,
             nr52: 0,
+            io: [0; 9],
             wave_pattern_ram: [0; 16],
         }
     }
@@ -63,6 +70,7 @@ impl APU {
             0xFF12 => self.nr12,
             0xFF13 => self.nr13,
             0xFF14 => self.nr14,
+            0xFF15 => self.single_memory_cell2,
             0xFF16 => self.nr21,
             0xFF17 => self.nr22,
             0xFF18 => self.nr23,
@@ -72,6 +80,7 @@ impl APU {
             0xFF1C => self.nr32,
             0xFF1D => self.nr33,
             0xFF1E => self.nr34,
+            0xFF1F => self.single_memory_cell1,
             0xFF20 => self.nr41,
             0xFF21 => self.nr42,
             0xFF22 => self.nr43,
@@ -79,9 +88,8 @@ impl APU {
             0xFF24 => self.nr50,
             0xFF25 => self.nr51,
             0xFF26 => self.nr52,
-            0xFF30..=0xFF3F => {
-                self.wave_pattern_ram[address as usize - 0xFF30]
-            }
+            0xFF27..=0xFF2F => self.io[address as usize - 0xFF27],
+            0xFF30..=0xFF3F => self.wave_pattern_ram[address as usize - 0xFF30],
             _ => panic!("Attempted to read from an invalid memory address: {:04X}", address),
         }
     }
@@ -93,6 +101,7 @@ impl APU {
             0xFF12 => self.nr12 = value,
             0xFF13 => self.nr13 = value,
             0xFF14 => self.nr14 = value,
+            0xFF15 => self.single_memory_cell2 = value,
             0xFF16 => self.nr21 = value,
             0xFF17 => self.nr22 = value,
             0xFF18 => self.nr23 = value,
@@ -102,6 +111,7 @@ impl APU {
             0xFF1C => self.nr32 = value,
             0xFF1D => self.nr33 = value,
             0xFF1E => self.nr34 = value,
+            0xFF1F => self.single_memory_cell1 = value,
             0xFF20 => self.nr41 = value,
             0xFF21 => self.nr42 = value,
             0xFF22 => self.nr43 = value,
@@ -109,9 +119,8 @@ impl APU {
             0xFF24 => self.nr50 = value,
             0xFF25 => self.nr51 = value,
             0xFF26 => self.nr52 = value,
-            0xFF30..=0xFF3F => {
-                self.wave_pattern_ram[address as usize - 0xFF30] = value;
-            }
+            0xFF27..=0xFF2F => self.io[address as usize - 0xFF27] = value,
+            0xFF30..=0xFF3F => self.wave_pattern_ram[address as usize - 0xFF30] = value,
             _ => panic!("Attempted to write to an invalid memory address: {:04X}", address),
         }
     }

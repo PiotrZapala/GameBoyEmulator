@@ -6,16 +6,56 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('GameBoy Emulator'),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            context.router.push(GamesRoute());
-          },
-          child: Text('Go to Games'),
-        ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/backgrounds/app_background.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'CrabBoy',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                context.router.push(GamesRoute());
+              },
+              child: Text(
+                'Go to Games',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.3),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

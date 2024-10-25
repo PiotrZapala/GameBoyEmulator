@@ -1,6 +1,6 @@
 use crate::cartridge::CARTRIDGE;
 
-pub trait MBC {
+pub trait MBC: Send {
     fn read_byte(&self, address: u16) -> u8;
     fn write_byte(&mut self, address: u16, value: u8);
 }
@@ -37,7 +37,8 @@ impl NMBC {
 impl MBC for NMBC {
     fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0x0000..=0x7FFF => self.rom[address as usize],
+            0x0000..=0x7FFF => {
+                self.rom[address as usize]},
             0xA000..=0xBFFF => {
                 if let Some(ref ram) = self.ram {
                     ram[(address - 0xA000) as usize]
