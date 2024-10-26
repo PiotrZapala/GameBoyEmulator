@@ -180,32 +180,36 @@ class _GamePageState extends State<GamePage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 GestureDetector(
-                  onTapDown: (_) => _handleButtonPress("Start"),
-                  onTapUp: (_) => _handleButtonRelease("Start"),
-                  onTapCancel: () => _handleButtonRelease("Start"),
-                  child: _buildTransparentButton("Start"),
-                ),
-                GestureDetector(
                   onTapDown: (_) => _handleButtonPress("Select"),
                   onTapUp: (_) => _handleButtonRelease("Select"),
                   onTapCancel: () => _handleButtonRelease("Select"),
                   child: _buildTransparentButton("Select"),
                 ),
+                GestureDetector(
+                  onTapDown: (_) => _handleButtonPress("Start"),
+                  onTapUp: (_) => _handleButtonRelease("Start"),
+                  onTapCancel: () => _handleButtonRelease("Start"),
+                  child: _buildTransparentButton("Start"),
+                ),
               ],
             ),
           ),
           Positioned(
-            bottom: 140,
-            right: 40,
-            child: Column(
-              children: [
+              bottom: 200,
+              right: 20,
+              child: Column(children: [
                 GestureDetector(
                   onTapDown: (_) => _handleButtonPress("A"),
                   onTapUp: (_) => _handleButtonRelease("A"),
                   onTapCancel: () => _handleButtonRelease("A"),
                   child: _buildCircularButton("A"),
                 ),
-                SizedBox(height: 15),
+              ])),
+          Positioned(
+            bottom: 120,
+            right: 70,
+            child: Column(
+              children: [
                 GestureDetector(
                   onTapDown: (_) => _handleButtonPress("B"),
                   onTapUp: (_) => _handleButtonRelease("B"),
@@ -216,8 +220,8 @@ class _GamePageState extends State<GamePage> {
             ),
           ),
           Positioned(
-            bottom: 140,
-            left: 40,
+            bottom: 100,
+            left: 10,
             child: Column(
               children: [
                 GestureDetector(
@@ -226,7 +230,6 @@ class _GamePageState extends State<GamePage> {
                   onTapCancel: () => _handleButtonRelease("Up"),
                   child: _buildArrowButton(Icons.arrow_upward, "Up"),
                 ),
-                SizedBox(height: 10),
                 Row(
                   children: [
                     GestureDetector(
@@ -235,7 +238,7 @@ class _GamePageState extends State<GamePage> {
                       onTapCancel: () => _handleButtonRelease("Left"),
                       child: _buildArrowButton(Icons.arrow_back, "Left"),
                     ),
-                    SizedBox(width: 10),
+                    SizedBox(width: 30),
                     GestureDetector(
                       onTapDown: (_) => _handleButtonPress("Right"),
                       onTapUp: (_) => _handleButtonRelease("Right"),
@@ -244,7 +247,6 @@ class _GamePageState extends State<GamePage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
                 GestureDetector(
                   onTapDown: (_) => _handleButtonPress("Down"),
                   onTapUp: (_) => _handleButtonRelease("Down"),
@@ -284,8 +286,8 @@ class _GamePageState extends State<GamePage> {
 
   Widget _buildCircularButton(String label) {
     return SizedBox(
-      width: 60,
-      height: 60,
+      width: 80,
+      height: 80,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.3),
@@ -307,8 +309,8 @@ class _GamePageState extends State<GamePage> {
 
   Widget _buildArrowButton(IconData icon, String direction) {
     return SizedBox(
-      width: 60,
-      height: 60,
+      width: 75,
+      height: 75,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.3),
