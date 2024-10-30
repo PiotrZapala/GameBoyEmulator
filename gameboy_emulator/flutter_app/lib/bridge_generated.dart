@@ -44,6 +44,23 @@ class RustAppImpl implements RustApp {
         argNames: ["romData"],
       );
 
+  Future<void> unloadEmulator({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_unload_emulator(port_),
+      parseSuccessData: _wire2api_unit,
+      parseErrorData: _wire2api_error,
+      constMeta: kUnloadEmulatorConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kUnloadEmulatorConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "unload_emulator",
+        argNames: [],
+      );
+
   Future<Uint32List?> renderFrame({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_render_frame(port_),
@@ -113,6 +130,23 @@ class RustAppImpl implements RustApp {
       const FlutterRustBridgeTaskConstMeta(
         debugName: "load",
         argNames: ["romData"],
+      );
+
+  Future<void> unload({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_unload(port_),
+      parseSuccessData: _wire2api_unit,
+      parseErrorData: _wire2api_error,
+      constMeta: kUnloadConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kUnloadConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "unload",
+        argNames: [],
       );
 
   Future<Uint32List?> render({dynamic hint}) {
@@ -331,6 +365,20 @@ class RustAppWire implements FlutterRustBridgeWireBase {
   late final _wire_load_rom = _wire_load_romPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
+  void wire_unload_emulator(
+    int port_,
+  ) {
+    return _wire_unload_emulator(
+      port_,
+    );
+  }
+
+  late final _wire_unload_emulatorPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_unload_emulator');
+  late final _wire_unload_emulator =
+      _wire_unload_emulatorPtr.asFunction<void Function(int)>();
+
   void wire_render_frame(
     int port_,
   ) {
@@ -392,6 +440,18 @@ class RustAppWire implements FlutterRustBridgeWireBase {
               ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>('wire_load');
   late final _wire_load = _wire_loadPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_unload(
+    int port_,
+  ) {
+    return _wire_unload(
+      port_,
+    );
+  }
+
+  late final _wire_unloadPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_unload');
+  late final _wire_unload = _wire_unloadPtr.asFunction<void Function(int)>();
 
   void wire_render(
     int port_,

@@ -13,6 +13,10 @@ abstract class RustApp {
 
   FlutterRustBridgeTaskConstMeta get kLoadRomConstMeta;
 
+  Future<void> unloadEmulator({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kUnloadEmulatorConstMeta;
+
   Future<Uint32List?> renderFrame({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRenderFrameConstMeta;
@@ -28,6 +32,10 @@ abstract class RustApp {
   Future<void> load({required Uint8List romData, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLoadConstMeta;
+
+  Future<void> unload({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kUnloadConstMeta;
 
   Future<Uint32List?> render({dynamic hint});
 
