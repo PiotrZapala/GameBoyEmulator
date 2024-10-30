@@ -35,6 +35,16 @@ fn wire_load_rom_impl(port_: MessagePort, rom_data: impl Wire2Api<Vec<u8>> + Unw
         },
     )
 }
+fn wire_unload_emulator_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "unload_emulator",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || move |task_callback| Ok(unload_emulator()),
+    )
+}
 fn wire_render_frame_impl(port_: MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, Option<Vec<u32>>>(
         WrapInfo {
@@ -82,6 +92,16 @@ fn wire_load_impl(port_: MessagePort, rom_data: impl Wire2Api<Vec<u8>> + UnwindS
             let api_rom_data = rom_data.wire2api();
             move |task_callback| Ok(load(api_rom_data))
         },
+    )
+}
+fn wire_unload_impl(port_: MessagePort) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "unload",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || move |task_callback| Ok(unload()),
     )
 }
 fn wire_render_impl(port_: MessagePort) {

@@ -11,9 +11,8 @@ pub fn stop(cpu: &mut CPU) {
 }
 
 pub fn halt(cpu: &mut CPU) {
-    cpu.halted = true;
     cpu.set_cycles(4);
-    cpu.pc += 1;
+    cpu.halted = true;
 }
 
 pub fn inc_r_u8(cpu: &mut CPU, register: u8) -> u8 {
@@ -179,19 +178,20 @@ pub fn add_a_u8(cpu: &mut CPU) {
 pub fn add_sp_i8(cpu: &mut CPU) {
     let offset = {
         let mmu = cpu.mmu.lock().unwrap();
-        mmu.fetch_i8(cpu.pc + 1)
+        mmu.fetch_i8(cpu.pc + 1) as i16 as u16
     };
 
-    let signed_value = offset as i16 as u16;
-    let (result, carry) = cpu.sp.overflowing_add(signed_value);
-    let half_carry = (cpu.sp & 0x0F) + (signed_value & 0x0F) > 0x0F;
+    let result = cpu.sp.wrapping_add(offset);
+    let half_carry = (cpu.sp & 0x000F) + (offset & 0x000F) > 0x000F;
+    let carry = (cpu.sp & 0x00FF) + (offset & 0x00FF) > 0x00FF;
 
     cpu.update_flags(Some(false), Some(carry), Some(false), Some(half_carry));
 
-    cpu.set_cycles(16);
     cpu.sp = result;
     cpu.pc += 2;
+    cpu.set_cycles(16);
 }
+
 
 pub fn adc_a_r_u8(cpu: &mut CPU, register: u8) {
     let carry_flag = if cpu.f & 0x10 != 0 { 1 } else { 0 };
@@ -819,7 +819,6 @@ pub fn ld_a_ff00_plus_u8(cpu: &mut CPU) {
         let mmu = cpu.mmu.lock().unwrap();
         0xFF00 + mmu.fetch_u8(cpu.pc + 1) as u16
     };
-    
     cpu.a = cpu.mmu.lock().unwrap().read_byte(address);
     cpu.set_cycles(12);
     cpu.pc += 2;
@@ -867,12 +866,12 @@ pub fn ld_u16_a(cpu: &mut CPU) {
 pub fn ld_hl_sp_plus_i8(cpu: &mut CPU) {
     let offset = {
         let mmu = cpu.mmu.lock().unwrap();
-        mmu.fetch_i8(cpu.pc + 1)
+        mmu.fetch_i8(cpu.pc + 1) as i16 as u16
     };
     
-    let signed_value = offset as i16 as u16;
-    let (result, carry) = cpu.sp.overflowing_add(signed_value);
-    let half_carry = (cpu.sp & 0x0F) + (signed_value & 0x0F) > 0x0F;
+    let result = cpu.sp.wrapping_add(offset);
+    let half_carry = (cpu.sp & 0x000F) + (offset & 0x000F) > 0x000F;
+    let carry = (cpu.sp & 0x00FF) + (offset & 0x00FF) > 0x00FF;
 
     cpu.update_flags(Some(false), Some(carry), Some(false), Some(half_carry));
 
@@ -1150,7 +1149,7 @@ pub fn call_nz_u16(cpu: &mut CPU) {
             let mmu = cpu.mmu.lock().unwrap();
             ((mmu.fetch_u8(cpu.pc + 2) as u16) << 8) | (mmu.fetch_u8(cpu.pc + 1) as u16)
         };
-
+        cpu.pc += 3;
         let lower_byte = (cpu.pc & 0xFF) as u8;
         let upper_byte = (cpu.pc >> 8) as u8;
         cpu.sp -= 2;
@@ -1175,7 +1174,7 @@ pub fn call_z_u16(cpu: &mut CPU) {
             let mmu = cpu.mmu.lock().unwrap();
             ((mmu.fetch_u8(cpu.pc + 2) as u16) << 8) | (mmu.fetch_u8(cpu.pc + 1) as u16)
         };
-
+        cpu.pc += 3;
         let lower_byte = (cpu.pc & 0xFF) as u8;
         let upper_byte = (cpu.pc >> 8) as u8;
         cpu.sp -= 2;
@@ -1200,7 +1199,7 @@ pub fn call_nc_u16(cpu: &mut CPU) {
             let mmu = cpu.mmu.lock().unwrap();
             ((mmu.fetch_u8(cpu.pc + 2) as u16) << 8) | (mmu.fetch_u8(cpu.pc + 1) as u16)
         };
-
+        cpu.pc += 3;
         let lower_byte = (cpu.pc & 0xFF) as u8;
         let upper_byte = (cpu.pc >> 8) as u8;
         cpu.sp -= 2;
@@ -1225,7 +1224,7 @@ pub fn call_c_u16(cpu: &mut CPU) {
             let mmu = cpu.mmu.lock().unwrap();
             ((mmu.fetch_u8(cpu.pc + 2) as u16) << 8) | (mmu.fetch_u8(cpu.pc + 1) as u16)
         };
-
+        cpu.pc += 3;
         let lower_byte = (cpu.pc & 0xFF) as u8;
         let upper_byte = (cpu.pc >> 8) as u8;
         cpu.sp -= 2;
@@ -1387,24 +1386,35 @@ pub fn rra(cpu: &mut CPU) {
 
 pub fn daa(cpu: &mut CPU) {
     let mut correction = 0;
-    let mut carry = false;
-    if cpu.f & 0x20 != 0 || (cpu.a & 0x0F) > 0x09 {
-        correction |= 0x06;
-    }
-    if cpu.f & 0x10 != 0 || (cpu.a >> 4) > 0x09 {
-        correction |= 0x60;
-        carry = true;
-    }
-    if cpu.f & 0x40 != 0 {
-        cpu.a = cpu.a.wrapping_sub(correction);
-    } else {
+    let mut carry = cpu.f & 0x10 != 0;
+
+    if cpu.f & 0x40 == 0 {
+        if carry || cpu.a > 0x99 {
+            correction |= 0x60;
+            carry = true;
+        }
+        if cpu.f & 0x20 != 0 || (cpu.a & 0x0F) > 0x09 {
+            correction |= 0x06;
+        }
         cpu.a = cpu.a.wrapping_add(correction);
+    } else {
+        if carry {
+            correction |= 0x60;
+        }
+        if cpu.f & 0x20 != 0 {
+            correction |= 0x06;
+        }
+        cpu.a = cpu.a.wrapping_sub(correction);
     }
+
     let zero = cpu.a == 0;
     cpu.update_flags(Some(zero), Some(carry), None, Some(false));
+    
     cpu.set_cycles(4);
     cpu.pc += 1;
 }
+
+
 
 pub fn cpl(cpu: &mut CPU) {
     cpu.a = !cpu.a;
@@ -1664,14 +1674,16 @@ pub fn srl_m_hl(cpu: &mut CPU) {
     let result = {
         let mut mmu = cpu.mmu.lock().unwrap();
         let value = mmu.read_byte(address);
+        let carry_flag = value & 0x01 != 0;
         let result = value >> 1;
         mmu.write_byte(address, result);
-        result
+        (result, carry_flag)
     };
 
-    let carry_flag = result & 1 != 0;
-    let zero = result == 0;
-    cpu.update_flags(Some(zero), Some(carry_flag), Some(false), Some(false));
+    let zero = result.0 == 0;
+
+    cpu.update_flags(Some(zero), Some(result.1), Some(false), Some(false));
+
     cpu.set_cycles(16);
     cpu.pc += 1;
 }

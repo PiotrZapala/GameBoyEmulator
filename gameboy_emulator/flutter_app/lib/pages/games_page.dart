@@ -91,6 +91,29 @@ class _GamesPageState extends State<GamesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: true,
+        centerTitle: true,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.videogame_asset, size: 36, color: Colors.white),
+            SizedBox(width: 10),
+            Text(
+              'Games',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
       body: Stack(
         children: [
           Positioned.fill(
@@ -99,43 +122,17 @@ class _GamesPageState extends State<GamesPage> {
               fit: BoxFit.cover,
             ),
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.videogame_asset, size: 36, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text(
-                      'Games',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
           Positioned.fill(
             child: Column(
               children: [
-                SizedBox(height: 50),
+                SizedBox(height: 5),
                 Expanded(
                   child: _gameFiles.isEmpty
                       ? Center(
                           child: Text(
                             'No games added',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
@@ -145,13 +142,16 @@ class _GamesPageState extends State<GamesPage> {
                           itemCount: _gameFiles.length,
                           itemBuilder: (context, index) {
                             return ListTile(
+                              visualDensity: VisualDensity(vertical: -6),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 16.0),
                               leading: Icon(Icons.videogame_asset,
                                   color: Colors.white),
                               title: Text(
                                 _formatGameName(_gameFiles[index]),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: 25,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

@@ -88,9 +88,17 @@ impl CPU {
     }
 
     pub fn tick(&mut self) {
-        self.handle_interrupts();
-        let opcode = self.mmu.lock().unwrap().fetch_instruction(self.pc);
-        self.execute(opcode);
+        let interrupt_handled = self.handle_interrupts();
+        
+        if self.halted && !interrupt_handled {
+            self.set_cycles(4);
+            return;
+        }
+    
+        if !self.halted {
+            let opcode = self.mmu.lock().unwrap().fetch_instruction(self.pc);
+            self.execute(opcode);
+        }
     }
 
     pub fn execute(&mut self, opcode: u8) {
@@ -119,46 +127,47 @@ impl CPU {
     }
 
     fn handle_interrupts(&mut self) -> bool {
-        if !self.ime {
-            return false;
-        } 
-
         let mut mmu = self.mmu.lock().unwrap();
         let interrupt_flag = mmu.read_byte(0xFF0F);
         let interrupt_enable = mmu.read_byte(0xFFFF);
-        let is_enabled_interrupts = interrupt_flag & interrupt_enable & 0b00011111;
-
-        if is_enabled_interrupts == 0 {
+        let pending_interrupts = interrupt_flag & interrupt_enable;
+    
+        if pending_interrupts == 0 {
             return false;
         }
-
-        self.sp -= 2;
-        mmu.write_byte(self.sp + 1, (self.pc >> 8) as u8);
-        mmu.write_byte(self.sp, (self.pc & 0xFF) as u8);
-
-        if interrupt_flag & INTERRUPT_FLAG::VBlank.value() != 0 {
-            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::VBlank.value());
-            self.pc = INTERRUPT_ADDRESS::VBlank.address();
-            self.ime = false;
-        } else if interrupt_flag & INTERRUPT_FLAG::LCDStat.value() != 0 {
-            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::LCDStat.value());
-            self.pc = INTERRUPT_ADDRESS::LCDStat.address();
-            self.ime = false;
-        } else if interrupt_flag & INTERRUPT_FLAG::Timer.value() != 0 {
-            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Timer.value());
-            self.pc = INTERRUPT_ADDRESS::Timer.address();
-            self.ime = false;
-        } else if interrupt_flag & INTERRUPT_FLAG::Serial.value() != 0 {
-            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Serial.value());
-            self.pc = INTERRUPT_ADDRESS::Serial.address();
-            self.ime = false;
-        } else if interrupt_flag & INTERRUPT_FLAG::Joypad.value() != 0 {
-            mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Joypad.value());
-            self.pc = INTERRUPT_ADDRESS::Joypad.address();
-            self.ime = false;
+    
+        if self.halted {
+            self.halted = false;
+            self.pc += 1;
         }
+    
+        if self.ime {
 
-        true
+            self.ime = false;
+            self.sp -= 2;
+            mmu.write_byte(self.sp + 1, (self.pc >> 8) as u8);
+            mmu.write_byte(self.sp, (self.pc & 0xFF) as u8);
+    
+            if pending_interrupts & INTERRUPT_FLAG::VBlank.value() != 0 {
+                mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::VBlank.value());
+                self.pc = INTERRUPT_ADDRESS::VBlank.address();
+            } else if pending_interrupts & INTERRUPT_FLAG::LCDStat.value() != 0 {
+                mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::LCDStat.value());
+                self.pc = INTERRUPT_ADDRESS::LCDStat.address();
+            } else if pending_interrupts & INTERRUPT_FLAG::Timer.value() != 0 {
+                mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Timer.value());
+                self.pc = INTERRUPT_ADDRESS::Timer.address();
+            } else if pending_interrupts & INTERRUPT_FLAG::Serial.value() != 0 {
+                mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Serial.value());
+                self.pc = INTERRUPT_ADDRESS::Serial.address();
+            } else if pending_interrupts & INTERRUPT_FLAG::Joypad.value() != 0 {
+                mmu.write_byte(0xFF0F, interrupt_flag & !INTERRUPT_FLAG::Joypad.value());
+                self.pc = INTERRUPT_ADDRESS::Joypad.address();
+            }
+            return true;
+        }
+    
+        false
     }
 
 

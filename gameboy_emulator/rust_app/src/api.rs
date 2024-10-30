@@ -18,6 +18,11 @@ pub fn load_rom(rom_data: Vec<u8>) {
     *emulator_instance = Some(emulator);
 }
 
+pub fn unload_emulator() {
+    let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
+    *emulator_instance = None;
+}
+
 pub fn render_frame() -> Option<Vec<u32>> {
     let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
     
@@ -58,6 +63,11 @@ pub fn set_buttons_state(button_states: Vec<u8>) {
 #[frb]
 pub fn load(rom_data: Vec<u8>) {
     load_rom(rom_data);
+}
+
+#[frb]
+pub fn unload() {
+    unload_emulator();
 }
 
 #[frb]
