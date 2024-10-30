@@ -2,11 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_app/bridge_definitions.dart';
-import 'package:flutter_app/components/game_screen.dart';
-import 'dart:ffi' as ffi;
-import 'dart:io' show Platform;
 import 'package:flutter_app/bridge_generated.dart';
+import 'package:flutter_app/components/game_screen.dart';
+import 'package:flutter_app/services/rust_app_service.dart';
 
 class GamePage extends StatefulWidget {
   final Uint8List romData;
@@ -19,9 +17,9 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
+  final RustAppImpl api = RustAppService.instance;
   late Timer _timer;
   Uint32List _frameBuffer = Uint32List(160 * 144);
-  late RustApp api;
   bool _isRunning = false;
   bool _isLoaded = false;
 
@@ -39,9 +37,6 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    api = RustAppImpl(Platform.isIOS
-        ? ffi.DynamicLibrary.process()
-        : ffi.DynamicLibrary.open('librust_app.so'));
     _loadGame();
   }
 
@@ -169,8 +164,12 @@ class _GamePageState extends State<GamePage> {
             top: 30,
             left: 10,
             child: IconButton(
-                icon: Icon(Icons.arrow_back, size: 30, color: Colors.white),
-                onPressed: () => Navigator.of(context).pop()),
+              icon: Icon(Icons.arrow_back, size: 30, color: Colors.white),
+              onPressed: () {
+                api.unload();
+                Navigator.of(context).pop();
+              },
+            ),
           ),
           Positioned(
             bottom: 40,
