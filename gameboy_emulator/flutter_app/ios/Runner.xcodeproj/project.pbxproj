@@ -11,7 +11,7 @@
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
-		8588750A2CCBB384002C62AB /* librust_app.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 852A2D072C56783C000D9219 /* librust_app.a */; };
+		857444C22CD2501E00934D7B /* librust_app.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 852A2D072C56783C000D9219 /* librust_app.a */; };
 		8588750B2CCCCC48002C62AB /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2E00B912B01E25BEFB72944 /* Pods_Runner.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
@@ -74,8 +74,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				857444C22CD2501E00934D7B /* librust_app.a in Frameworks */,
 				8588750B2CCCCC48002C62AB /* Pods_Runner.framework in Frameworks */,
-				8588750A2CCBB384002C62AB /* librust_app.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -490,8 +490,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = pl.gameboy.emulator;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRIP_STYLE = "non-global";
 				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_STYLE = "non-global";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -684,8 +684,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = pl.gameboy.emulator;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRIP_STYLE = "non-global";
 				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_STYLE = "non-global";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -714,8 +714,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = pl.gameboy.emulator;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRIP_STYLE = "non-global";
 				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_STYLE = "non-global";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

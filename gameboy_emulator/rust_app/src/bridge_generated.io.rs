@@ -7,6 +7,11 @@ pub extern "C" fn wire_load_rom(port_: i64, rom_data: *mut wire_uint_8_list) {
 }
 
 #[no_mangle]
+pub extern "C" fn wire_unload_emulator(port_: i64) {
+    wire_unload_emulator_impl(port_)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_render_frame(port_: i64) {
     wire_render_frame_impl(port_)
 }
@@ -24,6 +29,11 @@ pub extern "C" fn wire_set_buttons_state(port_: i64, button_states: *mut wire_ui
 #[no_mangle]
 pub extern "C" fn wire_load(port_: i64, rom_data: *mut wire_uint_8_list) {
     wire_load_impl(port_, rom_data)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_unload(port_: i64) {
+    wire_unload_impl(port_)
 }
 
 #[no_mangle]
