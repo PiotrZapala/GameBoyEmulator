@@ -169,34 +169,39 @@ impl PPU {
         self.render_sprites();
     }
 
-    fn render_background(&mut self) {
+    pub fn render_background(&mut self) {
         let tile_map_start: usize = if self.lcdc & 0x08 != 0 { 0x9C00 } else { 0x9800 };
         let tile_data_start: usize = if self.lcdc & 0x10 != 0 { 0x8000 } else { 0x8800 };
-        
+    
         let scy = self.scy;
         let scx = self.scx;
-
+    
         let y_offset = ((self.ly as u16 + scy as u16) & 0xFF) as u8;
-
+    
         for lx in 0..160 {
             let x_offset = ((lx as u16 + scx as u16) & 0xFF) as u8;
-
+    
             let tile_col = x_offset / 8;
             let tile_row = y_offset / 8;
             let tile_index = self.read_byte((tile_map_start + (tile_row as usize * 32) + tile_col as usize) as u16);
-
-            let tile_data_address = tile_data_start + (tile_index as usize * 16);
+    
+            let tile_data_address = if tile_data_start == 0x8800 {
+                tile_data_start + ((tile_index as i8 as i16 + 128) as usize * 16)
+            } else {
+                tile_data_start + (tile_index as usize * 16)
+            };
+    
             let pixel_row_in_tile = y_offset % 8;
             let byte1 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2) as u16);
             let byte2 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2 + 1) as u16);
-
+    
             let pixel_column_in_tile = 7 - (x_offset % 8);
             let low_bit = (byte1 >> pixel_column_in_tile) & 1;
             let high_bit = (byte2 >> pixel_column_in_tile) & 1;
             let color_index = (high_bit << 1) | low_bit;
-
+    
             let color = self.get_bg_color(color_index);
-
+    
             self.screen_buffer[self.ly as usize][lx as usize] = color;
         }
     }
@@ -205,29 +210,36 @@ impl PPU {
         if self.lcdc & 0x20 != 0 && self.ly >= self.wy {
             let tile_map_start: usize = if self.lcdc & 0x40 != 0 { 0x9C00 } else { 0x9800 };
             let tile_data_start: usize = if self.lcdc & 0x10 != 0 { 0x8000 } else { 0x8800 };
-
+    
             let window_y = self.ly - self.wy;
-
+    
             for lx in 0..160 {
                 if lx + 7 >= self.wx {
                     let window_x = lx + 7 - self.wx;
-
+    
                     let tile_col = window_x / 8;
                     let tile_row = window_y / 8;
-                    let tile_index = self.read_byte((tile_map_start + (tile_row as usize * 32) + tile_col as usize) as u16);
-
-                    let tile_data_address = tile_data_start + (tile_index as usize * 16);
+    
+                    let tile_index_address = tile_map_start + (tile_row as usize * 32) + tile_col as usize;
+                    let tile_index = self.read_byte(tile_index_address as u16);
+    
+                    let tile_data_address = if tile_data_start == 0x8800 {
+                        tile_data_start + ((tile_index as i8 as i16 + 128) as usize * 16)
+                    } else {
+                        tile_data_start + (tile_index as usize * 16)
+                    };
+    
                     let pixel_row_in_tile = window_y % 8;
                     let byte1 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2) as u16);
                     let byte2 = self.read_byte((tile_data_address + pixel_row_in_tile as usize * 2 + 1) as u16);
-
+    
                     let pixel_column_in_tile = 7 - (window_x % 8);
                     let low_bit = (byte1 >> pixel_column_in_tile) & 1;
                     let high_bit = (byte2 >> pixel_column_in_tile) & 1;
                     let color_index = (high_bit << 1) | low_bit;
-
+    
                     let color = self.get_bg_color(color_index);
-
+    
                     self.screen_buffer[self.ly as usize][lx as usize] = color;
                 }
             }
@@ -236,39 +248,44 @@ impl PPU {
 
     fn render_sprites(&mut self) {
         let mut sprite_count = 0;
-
+    
         for sprite_index in 0..40 {
             if sprite_count >= 10 {
                 break;
             }
-
+    
             let sprite_y = self.oam[sprite_index * 4] as i16 - 16;
             let sprite_x = self.oam[sprite_index * 4 + 1] as i16 - 8;
             let tile_index = self.oam[sprite_index * 4 + 2];
             let attributes = self.oam[sprite_index * 4 + 3];
-
+    
             let sprite_size = if self.lcdc & 0x04 != 0 { 16 } else { 8 };
-
+    
             if sprite_y <= self.ly as i16 && (sprite_y + sprite_size as i16) > self.ly as i16 {
-
                 let y_flip = attributes & 0x40 != 0;
                 let x_flip = attributes & 0x20 != 0;
-
                 let palette_index = if attributes & 0x10 != 0 { 1 } else { 0 };
-
+    
                 let sprite_row = if y_flip {
                     sprite_size - 1 - (self.ly as i16 - sprite_y) as u8
                 } else {
                     (self.ly as i16 - sprite_y) as u8
                 };
-
+    
                 for lx in 0..8 {
                     let sprite_col = if x_flip { 7 - lx } else { lx };
-                    let tile_line = self.get_tile_data(tile_index, sprite_row, sprite_col);
-
+    
+                    let tile_data_address: u16 = if self.lcdc & 0x10 == 0 && tile_index >= 0x80 {
+                        0x8800u16.wrapping_add((tile_index as i8 as i16 + 128) as u16 * 16)
+                    } else {
+                        0x8000 + (tile_index as u16 * 16)
+                    };
+    
+                    let tile_line = self.get_tile_data(tile_data_address, sprite_row, sprite_col);
+    
                     if tile_line != 0 {
                         let color = self.get_sprite_color(tile_line, palette_index);
-
+    
                         let pixel_x = sprite_x + lx as i16;
                         if pixel_x >= 0 && pixel_x < 160 {
                             let priority = attributes & 0x80 == 0;
@@ -283,13 +300,11 @@ impl PPU {
             }
         }
     }
-
-    fn get_tile_data(&self, tile_index: u8, row: u8, col: u8) -> u8 {
-        let tile_data_base = if self.lcdc & 0x10 != 0 { 0x8000 } else { 0x8800 };
-        let tile_address = tile_data_base + tile_index as usize * 16;
     
-        let byte1 = self.read_byte((tile_address + row as usize * 2) as u16);
-        let byte2 = self.read_byte((tile_address + row as usize * 2 + 1) as u16);
+
+    fn get_tile_data(&self, tile_data_address: u16, row: u8, col: u8) -> u8 {
+        let byte1 = self.read_byte(tile_data_address + row as u16 * 2);
+        let byte2 = self.read_byte(tile_data_address + row as u16 * 2 + 1);
     
         let bit = 7 - col;
         let low_bit = (byte1 >> bit) & 1;
@@ -298,6 +313,7 @@ impl PPU {
     
         result
     }
+    
 
     fn get_bg_color(&self, color_index: u8) -> u32 {
         let palette = self.bgp;
@@ -318,7 +334,7 @@ impl PPU {
         let shade = (palette >> (color_index * 2)) & 0x03;
     
         let color = match shade {
-            0 => 0x000000FF, // Transparent (0RGB: 00FF FF FF)
+            0 => 0x00FFFFFF, // Transparent (0RGB: 00FF FF FF)
             1 => 0x00AAAAAA, // Light grey (0RGB: 00AA AA AA)
             2 => 0x00555555, // Dark grey (0RGB: 0055 55 55)
             3 => 0x00000000, // Black (0RGB: 0000 00 00)
