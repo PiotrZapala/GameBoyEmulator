@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>This app requires access to your documents to add game files.</string>
 	<key>NSFileProviderUsageDescription</key>
