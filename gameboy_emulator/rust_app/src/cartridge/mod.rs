@@ -15,10 +15,11 @@ pub struct CARTRIDGE {
     pub mask_rom_version_number: u8, // 0x014C
     pub header_checksum: u8,         // 0x014D
     pub global_checksum: [u8; 2],    // 0x014E-0x014F
+    pub saved_ram: Option<Vec<u8>>,
 }
 
 impl CARTRIDGE {
-    pub fn new(data: Vec<u8>) -> Self {
+    pub fn new(data: Vec<u8>, saved_ram: Option<Vec<u8>>) -> Self {
         let ram_size = match data.get(0x0149) {
             Some(0x00) => None,             
             Some(0x01) => Some(2 * 1024),   
@@ -46,6 +47,7 @@ impl CARTRIDGE {
             header_checksum: data[0x014D],
             global_checksum: [data[0x014E], data[0x014F]],
             rom: data,
+            saved_ram,
         }
     }
 

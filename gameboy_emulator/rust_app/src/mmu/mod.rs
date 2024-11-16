@@ -55,6 +55,10 @@ impl MMU {
         self.read_byte(pc) as i8
     }
 
+    pub fn save_ram(&self) -> Option<Vec<u8>> {
+        self.mbc.save_ram()
+    }
+
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
             0x0000..=0x7FFF => {
