@@ -9,11 +9,12 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class RustApp {
-  Future<void> loadRom({required Uint8List romData, dynamic hint});
+  Future<void> loadRom(
+      {required Uint8List romData, Uint8List? ramData, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLoadRomConstMeta;
 
-  Future<void> unloadEmulator({dynamic hint});
+  Future<Uint8List?> unloadEmulator({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kUnloadEmulatorConstMeta;
 
@@ -29,11 +30,12 @@ abstract class RustApp {
 
   FlutterRustBridgeTaskConstMeta get kSetButtonsStateConstMeta;
 
-  Future<void> load({required Uint8List romData, dynamic hint});
+  Future<void> load(
+      {required Uint8List romData, Uint8List? ramData, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kLoadConstMeta;
 
-  Future<void> unload({dynamic hint});
+  Future<Uint8List?> unload({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kUnloadConstMeta;
 

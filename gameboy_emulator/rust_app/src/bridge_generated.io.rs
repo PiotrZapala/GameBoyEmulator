@@ -2,8 +2,12 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
-pub extern "C" fn wire_load_rom(port_: i64, rom_data: *mut wire_uint_8_list) {
-    wire_load_rom_impl(port_, rom_data)
+pub extern "C" fn wire_load_rom(
+    port_: i64,
+    rom_data: *mut wire_uint_8_list,
+    ram_data: *mut wire_uint_8_list,
+) {
+    wire_load_rom_impl(port_, rom_data, ram_data)
 }
 
 #[no_mangle]
@@ -27,8 +31,12 @@ pub extern "C" fn wire_set_buttons_state(port_: i64, button_states: *mut wire_ui
 }
 
 #[no_mangle]
-pub extern "C" fn wire_load(port_: i64, rom_data: *mut wire_uint_8_list) {
-    wire_load_impl(port_, rom_data)
+pub extern "C" fn wire_load(
+    port_: i64,
+    rom_data: *mut wire_uint_8_list,
+    ram_data: *mut wire_uint_8_list,
+) {
+    wire_load_impl(port_, rom_data, ram_data)
 }
 
 #[no_mangle]

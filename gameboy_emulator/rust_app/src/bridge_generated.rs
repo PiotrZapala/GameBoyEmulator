@@ -22,7 +22,11 @@ use std::sync::Arc;
 
 // Section: wire functions
 
-fn wire_load_rom_impl(port_: MessagePort, rom_data: impl Wire2Api<Vec<u8>> + UnwindSafe) {
+fn wire_load_rom_impl(
+    port_: MessagePort,
+    rom_data: impl Wire2Api<Vec<u8>> + UnwindSafe,
+    ram_data: impl Wire2Api<Option<Vec<u8>>> + UnwindSafe,
+) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
             debug_name: "load_rom",
@@ -31,12 +35,13 @@ fn wire_load_rom_impl(port_: MessagePort, rom_data: impl Wire2Api<Vec<u8>> + Unw
         },
         move || {
             let api_rom_data = rom_data.wire2api();
-            move |task_callback| Ok(load_rom(api_rom_data))
+            let api_ram_data = ram_data.wire2api();
+            move |task_callback| Ok(load_rom(api_rom_data, api_ram_data))
         },
     )
 }
 fn wire_unload_emulator_impl(port_: MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, Option<Vec<u8>>>(
         WrapInfo {
             debug_name: "unload_emulator",
             port: Some(port_),
@@ -81,7 +86,11 @@ fn wire_set_buttons_state_impl(
         },
     )
 }
-fn wire_load_impl(port_: MessagePort, rom_data: impl Wire2Api<Vec<u8>> + UnwindSafe) {
+fn wire_load_impl(
+    port_: MessagePort,
+    rom_data: impl Wire2Api<Vec<u8>> + UnwindSafe,
+    ram_data: impl Wire2Api<Option<Vec<u8>>> + UnwindSafe,
+) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
             debug_name: "load",
@@ -90,12 +99,13 @@ fn wire_load_impl(port_: MessagePort, rom_data: impl Wire2Api<Vec<u8>> + UnwindS
         },
         move || {
             let api_rom_data = rom_data.wire2api();
-            move |task_callback| Ok(load(api_rom_data))
+            let api_ram_data = ram_data.wire2api();
+            move |task_callback| Ok(load(api_rom_data, api_ram_data))
         },
     )
 }
 fn wire_unload_impl(port_: MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, Option<Vec<u8>>>(
         WrapInfo {
             debug_name: "unload",
             port: Some(port_),
@@ -159,6 +169,7 @@ where
         (!self.is_null()).then(|| self.wire2api())
     }
 }
+
 impl Wire2Api<u8> for u8 {
     fn wire2api(self) -> u8 {
         self

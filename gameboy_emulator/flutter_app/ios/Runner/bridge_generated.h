@@ -26,7 +26,9 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
-void wire_load_rom(int64_t port_, struct wire_uint_8_list *rom_data);
+void wire_load_rom(int64_t port_,
+                   struct wire_uint_8_list *rom_data,
+                   struct wire_uint_8_list *ram_data);
 
 void wire_unload_emulator(int64_t port_);
 
@@ -36,7 +38,7 @@ void wire_handle_vblank(int64_t port_);
 
 void wire_set_buttons_state(int64_t port_, struct wire_uint_8_list *button_states);
 
-void wire_load(int64_t port_, struct wire_uint_8_list *rom_data);
+void wire_load(int64_t port_, struct wire_uint_8_list *rom_data, struct wire_uint_8_list *ram_data);
 
 void wire_unload(int64_t port_);
 
