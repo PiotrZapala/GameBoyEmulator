@@ -36,6 +36,7 @@ class _$AppRouter extends RootStackRouter {
         child: GamePage(
           romData: args.romData,
           gameName: args.gameName,
+          ramData: args.ramData,
         ),
       );
     },
@@ -88,12 +89,14 @@ class GameRoute extends PageRouteInfo<GameRouteArgs> {
   GameRoute({
     required Uint8List romData,
     required String gameName,
+    required Uint8List? ramData,
   }) : super(
           GameRoute.name,
           path: '/game-page',
           args: GameRouteArgs(
             romData: romData,
             gameName: gameName,
+            ramData: ramData,
           ),
         );
 
@@ -104,14 +107,17 @@ class GameRouteArgs {
   const GameRouteArgs({
     required this.romData,
     required this.gameName,
+    required this.ramData,
   });
 
   final Uint8List romData;
 
   final String gameName;
 
+  final Uint8List? ramData;
+
   @override
   String toString() {
-    return 'GameRouteArgs{romData: $romData, gameName: $gameName}';
+    return 'GameRouteArgs{romData: $romData, gameName: $gameName, ramData: $ramData}';
   }
 }

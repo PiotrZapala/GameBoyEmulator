@@ -26,14 +26,16 @@ class RustAppImpl implements RustApp {
   factory RustAppImpl.wasm(FutureOr<WasmModule> module) =>
       RustAppImpl(module as ExternalLibrary);
   RustAppImpl.raw(this._platform);
-  Future<void> loadRom({required Uint8List romData, dynamic hint}) {
+  Future<void> loadRom(
+      {required Uint8List romData, Uint8List? ramData, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(romData);
+    var arg1 = _platform.api2wire_opt_uint_8_list(ramData);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_load_rom(port_, arg0),
+      callFfi: (port_) => _platform.inner.wire_load_rom(port_, arg0, arg1),
       parseSuccessData: _wire2api_unit,
       parseErrorData: _wire2api_error,
       constMeta: kLoadRomConstMeta,
-      argValues: [romData],
+      argValues: [romData, ramData],
       hint: hint,
     ));
   }
@@ -41,13 +43,13 @@ class RustAppImpl implements RustApp {
   FlutterRustBridgeTaskConstMeta get kLoadRomConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "load_rom",
-        argNames: ["romData"],
+        argNames: ["romData", "ramData"],
       );
 
-  Future<void> unloadEmulator({dynamic hint}) {
+  Future<Uint8List?> unloadEmulator({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_unload_emulator(port_),
-      parseSuccessData: _wire2api_unit,
+      parseSuccessData: _wire2api_opt_uint_8_list,
       parseErrorData: _wire2api_error,
       constMeta: kUnloadEmulatorConstMeta,
       argValues: [],
@@ -114,14 +116,16 @@ class RustAppImpl implements RustApp {
         argNames: ["buttonStates"],
       );
 
-  Future<void> load({required Uint8List romData, dynamic hint}) {
+  Future<void> load(
+      {required Uint8List romData, Uint8List? ramData, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(romData);
+    var arg1 = _platform.api2wire_opt_uint_8_list(ramData);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_load(port_, arg0),
+      callFfi: (port_) => _platform.inner.wire_load(port_, arg0, arg1),
       parseSuccessData: _wire2api_unit,
       parseErrorData: _wire2api_error,
       constMeta: kLoadConstMeta,
-      argValues: [romData],
+      argValues: [romData, ramData],
       hint: hint,
     ));
   }
@@ -129,13 +133,13 @@ class RustAppImpl implements RustApp {
   FlutterRustBridgeTaskConstMeta get kLoadConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "load",
-        argNames: ["romData"],
+        argNames: ["romData", "ramData"],
       );
 
-  Future<void> unload({dynamic hint}) {
+  Future<Uint8List?> unload({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_unload(port_),
-      parseSuccessData: _wire2api_unit,
+      parseSuccessData: _wire2api_opt_uint_8_list,
       parseErrorData: _wire2api_error,
       constMeta: kUnloadConstMeta,
       argValues: [],
@@ -210,7 +214,15 @@ class RustAppImpl implements RustApp {
     return raw == null ? null : _wire2api_uint_32_list(raw);
   }
 
+  Uint8List? _wire2api_opt_uint_8_list(dynamic raw) {
+    return raw == null ? null : _wire2api_uint_8_list(raw);
+  }
+
   int _wire2api_u32(dynamic raw) {
+    return raw as int;
+  }
+
+  int _wire2api_u8(dynamic raw) {
     return raw as int;
   }
 
@@ -220,6 +232,10 @@ class RustAppImpl implements RustApp {
 
   Uint32List _wire2api_uint_32_list(dynamic raw) {
     return raw as Uint32List;
+  }
+
+  Uint8List _wire2api_uint_8_list(dynamic raw) {
+    return raw as Uint8List;
   }
 
   void _wire2api_unit(dynamic raw) {
@@ -240,6 +256,11 @@ class RustAppPlatform extends FlutterRustBridgeBase<RustAppWire> {
   RustAppPlatform(ffi.DynamicLibrary dylib) : super(RustAppWire(dylib));
 
 // Section: api2wire
+
+  @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_opt_uint_8_list(Uint8List? raw) {
+    return raw == null ? ffi.nullptr : api2wire_uint_8_list(raw);
+  }
 
   @protected
   ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
@@ -351,19 +372,22 @@ class RustAppWire implements FlutterRustBridgeWireBase {
   void wire_load_rom(
     int port_,
     ffi.Pointer<wire_uint_8_list> rom_data,
+    ffi.Pointer<wire_uint_8_list> ram_data,
   ) {
     return _wire_load_rom(
       port_,
       rom_data,
+      ram_data,
     );
   }
 
   late final _wire_load_romPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>('wire_load_rom');
-  late final _wire_load_rom = _wire_load_romPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_load_rom');
+  late final _wire_load_rom = _wire_load_romPtr.asFunction<
+      void Function(
+          int, ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_unload_emulator(
     int port_,
@@ -427,19 +451,22 @@ class RustAppWire implements FlutterRustBridgeWireBase {
   void wire_load(
     int port_,
     ffi.Pointer<wire_uint_8_list> rom_data,
+    ffi.Pointer<wire_uint_8_list> ram_data,
   ) {
     return _wire_load(
       port_,
       rom_data,
+      ram_data,
     );
   }
 
   late final _wire_loadPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>('wire_load');
-  late final _wire_load = _wire_loadPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_load');
+  late final _wire_load = _wire_loadPtr.asFunction<
+      void Function(
+          int, ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_unload(
     int port_,

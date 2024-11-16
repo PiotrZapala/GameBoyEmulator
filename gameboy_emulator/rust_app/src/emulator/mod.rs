@@ -48,6 +48,10 @@ impl EMULATOR {
         }
     }
 
+    pub fn save_ram(&self) -> Option<Vec<u8>> {
+        self.mmu.lock().unwrap().save_ram()
+    }
+
     pub fn run_cycles(&mut self, mut cycles_to_run: u32) {
         while cycles_to_run > 0 {
             let mut cpu = self.cpu.lock().unwrap();

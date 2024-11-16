@@ -1,16 +1,20 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/bridge_generated.dart';
 import 'package:flutter_app/components/game_screen.dart';
 import 'package:flutter_app/services/rust_app_service.dart';
+import 'package:path_provider/path_provider.dart';
 
 class GamePage extends StatefulWidget {
   final Uint8List romData;
   final String gameName;
+  final Uint8List? ramData;
 
-  GamePage({required this.romData, required this.gameName});
+  GamePage(
+      {required this.romData, required this.gameName, required this.ramData});
 
   @override
   _GamePageState createState() => _GamePageState();
@@ -18,10 +22,12 @@ class GamePage extends StatefulWidget {
 
 class _GamePageState extends State<GamePage> {
   final RustAppImpl api = RustAppService.instance;
-  late Timer _timer;
+  Timer? _timer;
   Uint32List _frameBuffer = Uint32List(160 * 144);
   bool _isRunning = false;
   bool _isLoaded = false;
+  bool _isDoubleSpeed = false;
+  Duration frameDuration = Duration(milliseconds: 16);
 
   Map<String, bool> _buttonStates = {
     "Up": true,
@@ -42,13 +48,25 @@ class _GamePageState extends State<GamePage> {
 
   Future<void> _loadGame() async {
     try {
-      await api.load(romData: widget.romData);
+      await api.load(romData: widget.romData, ramData: widget.ramData);
       setState(() {
         _isLoaded = true;
       });
     } catch (e) {
       print("Błąd podczas ładowania ROM: $e");
     }
+  }
+
+  Future<void> _saveGameRam(String gameName, Uint8List ramData) async {
+    final storagePath = await _getRomStoragePath();
+    final ramFilePath = '$storagePath/$gameName.sav';
+
+    await File(ramFilePath).writeAsBytes(ramData);
+  }
+
+  Future<String> _getRomStoragePath() async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
   }
 
   void _startEmulator() {
@@ -65,7 +83,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _startGameLoop() {
-    const frameDuration = Duration(milliseconds: 16);
+    _timer?.cancel();
     _timer = Timer.periodic(frameDuration, (timer) async {
       if (_isRunning) {
         try {
@@ -89,6 +107,16 @@ class _GamePageState extends State<GamePage> {
     });
   }
 
+  void _toggleSpeed() {
+    setState(() {
+      _isDoubleSpeed = !_isDoubleSpeed;
+      frameDuration = _isDoubleSpeed
+          ? Duration(milliseconds: 8)
+          : Duration(milliseconds: 16);
+    });
+    _startGameLoop();
+  }
+
   void _handleButtonPress(String button) {
     setState(() {
       _buttonStates[button] = false;
@@ -109,7 +137,7 @@ class _GamePageState extends State<GamePage> {
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -165,12 +193,37 @@ class _GamePageState extends State<GamePage> {
             left: 10,
             child: IconButton(
               icon: Icon(Icons.arrow_back, size: 30, color: Colors.white),
-              onPressed: () {
-                api.unload();
+              onPressed: () async {
+                final ramData = await api.unload();
+
+                if (ramData != null) {
+                  await _saveGameRam(gameName, ramData);
+                }
+
                 Navigator.of(context).pop();
               },
             ),
           ),
+          Positioned(
+              top: 30,
+              right: 10,
+              child: GestureDetector(
+                onTap: _toggleSpeed,
+                child: Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    _isDoubleSpeed ? "x1" : "x2",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )),
           Positioned(
             bottom: 40,
             left: MediaQuery.of(context).size.width / 4,

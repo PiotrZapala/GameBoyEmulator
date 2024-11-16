@@ -10,17 +10,22 @@ lazy_static! {
     static ref EMULATOR_INSTANCE: Mutex<Option<EMULATOR>> = Mutex::new(None);
 }
 
-pub fn load_rom(rom_data: Vec<u8>) {
-    let cartridge = CARTRIDGE::new(rom_data);
+pub fn load_rom(rom_data: Vec<u8>, ram_data: Option<Vec<u8>>) {
+    let cartridge = CARTRIDGE::new(rom_data, ram_data);
     let emulator = EMULATOR::new(cartridge);
-    
+
     let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
     *emulator_instance = Some(emulator);
 }
 
-pub fn unload_emulator() {
+#[frb]
+pub fn unload_emulator() -> Option<Vec<u8>> {
     let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
+    
+    let ram_data = emulator_instance.as_ref().and_then(|emulator| emulator.save_ram());
+    
     *emulator_instance = None;
+    ram_data
 }
 
 pub fn render_frame() -> Option<Vec<u32>> {
@@ -61,13 +66,13 @@ pub fn set_buttons_state(button_states: Vec<u8>) {
 }
 
 #[frb]
-pub fn load(rom_data: Vec<u8>) {
-    load_rom(rom_data);
+pub fn load(rom_data: Vec<u8>, ram_data: Option<Vec<u8>>) {
+    load_rom(rom_data, ram_data);
 }
 
 #[frb]
-pub fn unload() {
-    unload_emulator();
+pub fn unload() -> Option<Vec<u8>> {
+    unload_emulator()
 }
 
 #[frb]
