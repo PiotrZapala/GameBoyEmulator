@@ -74,10 +74,23 @@ class _GamesPageState extends State<GamesPage> {
       Uint8List romData = await romFile.readAsBytes();
       String gameName = _formatGameName(gamePath);
 
-      context.router.push(GameRoute(romData: romData, gameName: gameName));
+      Uint8List? ramData = await _loadGameRam(gameName);
+
+      context.router.push(
+          GameRoute(romData: romData, gameName: gameName, ramData: ramData));
     } catch (e) {
       print("Błąd podczas odczytu ROM: $e");
     }
+  }
+
+  Future<Uint8List?> _loadGameRam(String gameName) async {
+    final storagePath = await _getRomStoragePath();
+    final ramFilePath = '$storagePath/$gameName.sav';
+
+    if (await File(ramFilePath).exists()) {
+      return await File(ramFilePath).readAsBytes();
+    }
+    return null;
   }
 
   String _formatGameName(String filePath) {
