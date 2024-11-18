@@ -60,16 +60,6 @@ fn wire_render_frame_impl(port_: MessagePort) {
         move || move |task_callback| Ok(render_frame()),
     )
 }
-fn wire_handle_vblank_impl(port_: MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
-        WrapInfo {
-            debug_name: "handle_vblank",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || move |task_callback| Ok(handle_vblank()),
-    )
-}
 fn wire_set_buttons_state_impl(
     port_: MessagePort,
     button_states: impl Wire2Api<Vec<u8>> + UnwindSafe,
@@ -122,16 +112,6 @@ fn wire_render_impl(port_: MessagePort) {
             mode: FfiCallMode::Normal,
         },
         move || move |task_callback| Ok(render()),
-    )
-}
-fn wire_vblank_impl(port_: MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
-        WrapInfo {
-            debug_name: "vblank",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || move |task_callback| Ok(vblank()),
     )
 }
 fn wire_set_buttons_impl(port_: MessagePort, button_states: impl Wire2Api<Vec<u8>> + UnwindSafe) {

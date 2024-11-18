@@ -21,11 +21,6 @@ pub extern "C" fn wire_render_frame(port_: i64) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_handle_vblank(port_: i64) {
-    wire_handle_vblank_impl(port_)
-}
-
-#[no_mangle]
 pub extern "C" fn wire_set_buttons_state(port_: i64, button_states: *mut wire_uint_8_list) {
     wire_set_buttons_state_impl(port_, button_states)
 }
@@ -47,11 +42,6 @@ pub extern "C" fn wire_unload(port_: i64) {
 #[no_mangle]
 pub extern "C" fn wire_render(port_: i64) {
     wire_render_impl(port_)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_vblank(port_: i64) {
-    wire_vblank_impl(port_)
 }
 
 #[no_mangle]

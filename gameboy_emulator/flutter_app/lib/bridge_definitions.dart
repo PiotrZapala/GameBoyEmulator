@@ -22,10 +22,6 @@ abstract class RustApp {
 
   FlutterRustBridgeTaskConstMeta get kRenderFrameConstMeta;
 
-  Future<void> handleVblank({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kHandleVblankConstMeta;
-
   Future<void> setButtonsState({required Uint8List buttonStates, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kSetButtonsStateConstMeta;
@@ -42,10 +38,6 @@ abstract class RustApp {
   Future<Uint32List?> render({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRenderConstMeta;
-
-  Future<void> vblank({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kVblankConstMeta;
 
   Future<void> setButtons({required Uint8List buttonStates, dynamic hint});
 

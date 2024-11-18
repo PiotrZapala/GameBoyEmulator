@@ -34,8 +34,6 @@ void wire_unload_emulator(int64_t port_);
 
 void wire_render_frame(int64_t port_);
 
-void wire_handle_vblank(int64_t port_);
-
 void wire_set_buttons_state(int64_t port_, struct wire_uint_8_list *button_states);
 
 void wire_load(int64_t port_, struct wire_uint_8_list *rom_data, struct wire_uint_8_list *ram_data);
@@ -43,8 +41,6 @@ void wire_load(int64_t port_, struct wire_uint_8_list *rom_data, struct wire_uin
 void wire_unload(int64_t port_);
 
 void wire_render(int64_t port_);
-
-void wire_vblank(int64_t port_);
 
 void wire_set_buttons(int64_t port_, struct wire_uint_8_list *button_states);
 
@@ -57,12 +53,10 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_load_rom);
     dummy_var ^= ((int64_t) (void*) wire_unload_emulator);
     dummy_var ^= ((int64_t) (void*) wire_render_frame);
-    dummy_var ^= ((int64_t) (void*) wire_handle_vblank);
     dummy_var ^= ((int64_t) (void*) wire_set_buttons_state);
     dummy_var ^= ((int64_t) (void*) wire_load);
     dummy_var ^= ((int64_t) (void*) wire_unload);
     dummy_var ^= ((int64_t) (void*) wire_render);
-    dummy_var ^= ((int64_t) (void*) wire_vblank);
     dummy_var ^= ((int64_t) (void*) wire_set_buttons);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
