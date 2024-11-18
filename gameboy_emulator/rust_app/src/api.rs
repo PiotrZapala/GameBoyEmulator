@@ -38,14 +38,6 @@ pub fn render_frame() -> Option<Vec<u32>> {
     }
 }
 
-pub fn handle_vblank() {
-    let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
-    
-    if let Some(ref mut emulator) = *emulator_instance {
-        emulator.handle_vblank();
-    }
-}
-
 pub fn set_buttons_state(button_states: Vec<u8>) {
     let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
     
@@ -78,11 +70,6 @@ pub fn unload() -> Option<Vec<u8>> {
 #[frb]
 pub fn render() -> Option<Vec<u32>> {
     render_frame()
-}
-
-#[frb]
-pub fn vblank() {
-    handle_vblank();
 }
 
 #[frb]

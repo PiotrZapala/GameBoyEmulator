@@ -22,6 +22,9 @@ pub struct PPU {
     screen_buffer: [[u32; 160]; 144], // Screen buffer
     mmu: Option<Arc<Mutex<MMU>>>,
     cpu: Option<Arc<Mutex<CPU>>>,
+    mode: u8,         
+    cycles: u32,
+    frame_ready: bool,
 }
 
 impl PPU {
@@ -45,6 +48,9 @@ impl PPU {
             screen_buffer: [[0; 160]; 144],
             mmu: None,
             cpu: None,
+            mode: 2, 
+            cycles: 0,
+            frame_ready: false,
         }
     }
 
@@ -72,9 +78,7 @@ impl PPU {
         match address {
             0x8000..=0x9FFF => self.vram[address as usize - 0x8000] = value,
             0xFE00..=0xFE9F => self.oam[address as usize - 0xFE00] = value,
-            0xFF40 => {
-                self.lcdc = value;
-            },
+            0xFF40 => self.lcdc = value,
             0xFF41 => self.stat = value,
             0xFF42 => self.scy = value,
             0xFF43 => self.scx = value,
@@ -93,8 +97,94 @@ impl PPU {
         }
     }
 
+    pub fn tick(&mut self, cycles: u16) {
+        self.cycles += cycles as u32;
+    
+        match self.mode {
+            2 => { // OAM Search
+                if self.cycles >= 80 {
+                    self.cycles -= 80;
+                    self.stat |= 0b11;
+                    self.mode = 3;
+                }
+            }
+            3 => { // Access VRAM
+                if self.cycles >= 170 {
+                    self.cycles -= 170;
+
+                    if self.stat & (1 << 3) != 0 {
+                        if let Some(cpu) = &self.cpu {
+                            cpu.lock().unwrap().request_interrupt(0b00000010);
+                        }
+                    }
+                    let ly_coincidence = self.ly == self.lyc;
+                    if ly_coincidence {
+                        self.stat |= 1 << 2;
+                        if self.stat & (1 << 6) != 0 {
+                            if let Some(cpu) = &self.cpu {
+                                cpu.lock().unwrap().request_interrupt(0b00000010);
+                            }
+                        }
+                    } else {
+                        self.stat &= !(1 << 2);
+                    }
+    
+                    self.stat &= !0b11;
+                    self.mode = 0;
+                }
+            }
+            0 => { // H-Blank
+                if self.cycles >= 206 {
+                    self.cycles -= 206;
+                    self.render_scanline();
+                    self.ly += 1;
+
+                    if self.ly == 144 {
+                        self.stat |= 0b01;
+                        self.stat &= !(1 << 1);
+                        self.mode = 1;
+                        if let Some(cpu) = &self.cpu {
+                            cpu.lock().unwrap().request_interrupt(0b00000001);
+                        }
+                    } else {
+                        self.stat |= 0b10;
+                        self.stat &= !0b01;
+                        self.mode = 2;
+                    }
+                }
+            }
+            1 => { // V-Blank
+                if self.cycles >= 456 {
+                    self.cycles -= 456;
+                    self.ly += 1;
+    
+                    if self.ly > 153 {
+                        self.ly = 0;
+                        self.stat |= 0b10;
+                        self.stat &= !0b01;
+                        self.mode = 2;
+                        self.frame_ready = true;
+                    }
+                }
+            }
+            _ => panic!("Unknown mode!"),
+        }
+    }
+
+    pub fn is_frame_ready(&self) -> bool {
+        self.frame_ready
+    }
+
+    pub fn reset_frame_ready(&mut self) {
+        self.frame_ready = false;
+    }
+    
     pub fn is_display_enabled(&self) -> bool {
         (self.lcdc & 0x80) != 0
+    }
+
+    fn is_background_enabled(&self) -> bool {
+        self.lcdc & 0x01 != 0
     }
 
     pub fn set_mmu(&mut self, mmu: Arc<Mutex<MMU>>) {
@@ -103,38 +193,6 @@ impl PPU {
 
     pub fn set_cpu(&mut self, cpu: Arc<Mutex<CPU>>) {
         self.cpu = Some(cpu);
-    }
-
-    pub fn set_ly(&mut self, value: u8) {
-        self.ly = value;
-        if self.ly == self.lyc {
-            self.stat |= 0x04;
-            if self.stat & 0x40 != 0 {
-                if let Some(cpu) = &self.cpu {
-                    cpu.lock().unwrap().request_interrupt(0b00000010);
-                }
-            }
-        } else {
-            self.stat &= !0x04;
-        }
-    }
-
-    pub fn set_stat_mode(&mut self, mode: u8) {
-        self.stat = (self.stat & 0xFC) | (mode & 0x03);
-        if mode != 3 {
-            let interrupt_enabled = match mode {
-                0 => self.stat & (1 << 3), // H-Blank
-                1 => self.stat & (1 << 4), // V-Blank
-                2 => self.stat & (1 << 5), // OAM search
-                _ => 0,
-            };
-
-            if interrupt_enabled != 0 {
-                if let Some(cpu) = &self.cpu {
-                    cpu.lock().unwrap().request_interrupt(0b00000010);
-                }
-            }
-        }
     }
 
     pub fn get_screen_buffer(&self) -> Vec<u32> {
@@ -164,7 +222,12 @@ impl PPU {
     }
 
     pub fn render_scanline(&mut self) {
-        self.render_background();
+        if !self.is_display_enabled() {
+            return;
+        }
+        if self.is_background_enabled() {
+            self.render_background();
+        }
         self.render_window();
         self.render_sprites();
     }
