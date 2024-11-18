@@ -80,23 +80,6 @@ class RustAppImpl implements RustApp {
         argNames: [],
       );
 
-  Future<void> handleVblank({dynamic hint}) {
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_handle_vblank(port_),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_error,
-      constMeta: kHandleVblankConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kHandleVblankConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "handle_vblank",
-        argNames: [],
-      );
-
   Future<void> setButtonsState(
       {required Uint8List buttonStates, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(buttonStates);
@@ -170,23 +153,6 @@ class RustAppImpl implements RustApp {
         argNames: [],
       );
 
-  Future<void> vblank({dynamic hint}) {
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_vblank(port_),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_error,
-      constMeta: kVblankConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kVblankConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "vblank",
-        argNames: [],
-      );
-
   Future<void> setButtons({required Uint8List buttonStates, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(buttonStates);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -222,12 +188,12 @@ class RustAppImpl implements RustApp {
     return raw as int;
   }
 
-  int _wire2api_u8(dynamic raw) {
-    return raw as int;
-  }
-
   Object _wire2api_error(dynamic raw) {
     return raw;
+  }
+
+  int _wire2api_u8(dynamic raw) {
+    return raw as int;
   }
 
   Uint32List _wire2api_uint_32_list(dynamic raw) {
@@ -417,20 +383,6 @@ class RustAppWire implements FlutterRustBridgeWireBase {
   late final _wire_render_frame =
       _wire_render_framePtr.asFunction<void Function(int)>();
 
-  void wire_handle_vblank(
-    int port_,
-  ) {
-    return _wire_handle_vblank(
-      port_,
-    );
-  }
-
-  late final _wire_handle_vblankPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_handle_vblank');
-  late final _wire_handle_vblank =
-      _wire_handle_vblankPtr.asFunction<void Function(int)>();
-
   void wire_set_buttons_state(
     int port_,
     ffi.Pointer<wire_uint_8_list> button_states,
@@ -491,18 +443,6 @@ class RustAppWire implements FlutterRustBridgeWireBase {
   late final _wire_renderPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_render');
   late final _wire_render = _wire_renderPtr.asFunction<void Function(int)>();
-
-  void wire_vblank(
-    int port_,
-  ) {
-    return _wire_vblank(
-      port_,
-    );
-  }
-
-  late final _wire_vblankPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_vblank');
-  late final _wire_vblank = _wire_vblankPtr.asFunction<void Function(int)>();
 
   void wire_set_buttons(
     int port_,
