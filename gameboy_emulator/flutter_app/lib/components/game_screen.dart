@@ -10,7 +10,13 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    bool isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
+    double screenWidth = isLandscape
+        ? MediaQuery.of(context).size.height
+        : MediaQuery.of(context).size.width;
+
     double scale = screenWidth * 0.8 / originalWidth;
 
     double finalWidth = originalWidth * scale;

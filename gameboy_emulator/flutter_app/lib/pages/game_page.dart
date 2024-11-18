@@ -98,8 +98,6 @@ class _GamePageState extends State<GamePage> {
               _frameBuffer = Uint32List.fromList(frame);
             });
           }
-
-          await api.handleVblank();
         } catch (e) {
           print('Błąd podczas renderowania klatki: $e');
         }
@@ -144,6 +142,8 @@ class _GamePageState extends State<GamePage> {
   @override
   Widget build(BuildContext context) {
     String gameName = widget.gameName;
+    bool isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
       body: Stack(
@@ -156,22 +156,23 @@ class _GamePageState extends State<GamePage> {
           ),
           Column(
             children: [
-              SizedBox(height: 60),
-              Text(
-                gameName,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2.0,
-                  color: Colors.white,
+              SizedBox(height: isLandscape ? 5 : 60),
+              if (!isLandscape)
+                Text(
+                  gameName,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2.0,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              SizedBox(height: 20),
+              SizedBox(height: isLandscape ? 5 : 20),
               Padding(
                 padding: const EdgeInsets.only(top: 10.0),
                 child: GameScreen(frameBuffer: _frameBuffer),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: isLandscape ? 5 : 20),
               if (_isLoaded && !_isRunning)
                 ElevatedButton(
                   onPressed: _startEmulator,
@@ -225,9 +226,13 @@ class _GamePageState extends State<GamePage> {
                 ),
               )),
           Positioned(
-            bottom: 40,
-            left: MediaQuery.of(context).size.width / 4,
-            right: MediaQuery.of(context).size.width / 4,
+            bottom: isLandscape ? 10 : 40,
+            left: isLandscape
+                ? MediaQuery.of(context).size.width / 5
+                : MediaQuery.of(context).size.width / 4,
+            right: isLandscape
+                ? MediaQuery.of(context).size.width / 5
+                : MediaQuery.of(context).size.width / 4,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -247,8 +252,8 @@ class _GamePageState extends State<GamePage> {
             ),
           ),
           Positioned(
-              bottom: 200,
-              right: 20,
+              bottom: isLandscape ? 160 : 200,
+              right: isLandscape ? 40 : 20,
               child: Column(children: [
                 GestureDetector(
                   onTapDown: (_) => _handleButtonPress("A"),
@@ -258,8 +263,8 @@ class _GamePageState extends State<GamePage> {
                 ),
               ])),
           Positioned(
-            bottom: 120,
-            right: 70,
+            bottom: isLandscape ? 80 : 120,
+            right: isLandscape ? 90 : 70,
             child: Column(
               children: [
                 GestureDetector(
@@ -272,8 +277,8 @@ class _GamePageState extends State<GamePage> {
             ),
           ),
           Positioned(
-            bottom: 100,
-            left: 10,
+            bottom: isLandscape ? 60 : 100,
+            left: isLandscape ? 30 : 10,
             child: Column(
               children: [
                 GestureDetector(
