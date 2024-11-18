@@ -101,6 +101,66 @@ class _GamesPageState extends State<GamesPage> {
     return fileName.toUpperCase();
   }
 
+  Future<void> _deleteGame(String gamePath) async {
+    try {
+      File gameFile = File(gamePath);
+      if (await gameFile.exists()) {
+        await gameFile.delete();
+      }
+
+      String gameName = _formatGameName(gamePath);
+      final storagePath = await _getRomStoragePath();
+      String saveFilePath = '$storagePath/$gameName.sav';
+
+      File saveFile = File(saveFilePath);
+      if (await saveFile.exists()) {
+        await saveFile.delete();
+      }
+
+      setState(() {
+        _gameFiles.remove(gamePath);
+      });
+      await _saveGameFiles();
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Game and save data deleted successfully.'),
+      ));
+    } catch (e) {
+      print("Error deleting game: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error deleting game.'),
+      ));
+    }
+  }
+
+  Future<void> _confirmAndDeleteGame(String gamePath) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Deletion'),
+          content: Text(
+              'Are you sure you want to delete this game and its save data?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteGame(gamePath);
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -169,6 +229,8 @@ class _GamesPageState extends State<GamesPage> {
                                 ),
                               ),
                               onTap: () => _openGame(_gameFiles[index]),
+                              onLongPress: () =>
+                                  _confirmAndDeleteGame(_gameFiles[index]),
                             );
                           },
                         ),
