@@ -13,16 +13,8 @@ CrabBoy to mobilny emulator tworzony w ramach pracy inżynierskiej, łączący p
     
 ## 📁 Struktura projektu
 ```
-CrabBoy/
-├── rust_core          # Moduł odpowiedzialny za rdzeń emulatora
-│   ├── src
-│   ├── Cargo.toml
-│   └── target
-├── flutter_interface  # Moduł odpowiedzialny za interfejs użytkownika
-│   ├── lib
-│   ├── pubspec.yaml
-│   └── build
-└── README.md           # Dokumentacja projektu
+CrabBoy/ ├── rust_core # Moduł odpowiedzialny za rdzeń emulatora │ ├── bridge_generator # Skrypty generujące most FFI │ │ ├── flutter_rust_bridge_codegen.sh # Skrypt dla platformy ogólnej │ │ └── flutter_rust_bridge_codegen_ios.sh # Skrypt dla iOS │ ├── src # Kod źródłowy rdzenia emulatora │ │ ├── cpu # Moduł CPU │ │ ├── apu # Moduł APU │ │ ├── mmu # Moduł MMU │ │ ├── ppu # Moduł PPU │ │ ├── timer # Moduł timera │ │ ├── joypad # Moduł joypada │ │ ├── bootrom # Moduł bootrom │ │ ├── emulator # Główny moduł emulatora │ │ ├── cartridge # Moduł obsługi cartridge │ │ ├── api.rs # API dla komunikacji między Flutterem a Rust │ │ ├── lib.rs # Główna biblioteka Rust │ │ ├── bridge_generated.io.rs # Wygenerowany mostek I/O │ │ └── bridge_generated.rs # Wygenerowany mostek dla ogólnej platformy │ ├── Cargo.toml # Konfiguracja projektu Rust │ └── target # Pliki wynikowe kompilacji Rust ├── flutter_interface # Moduł odpowiedzialny za interfejs użytkownika │ ├── lib # Kod źródłowy interfejsu w Dart │ ├── pubspec.yaml # Konfiguracja Fluttera │ └── build # Pliki wynikowe kompilacji Fluttera ├── LICENSE # Licencja projektu └── README.md # Dokumentacja projektu
+
 ```
 
 CrabBoy wykorzystuje zaawansowane technologie w celu zapewnienia wydajności i nowoczesności:
