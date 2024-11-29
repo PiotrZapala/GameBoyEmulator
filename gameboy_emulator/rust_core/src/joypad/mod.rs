@@ -68,8 +68,7 @@ impl JOYPAD {
     pub fn check_for_interrupt(&mut self) {
         if self.joypad_state_has_changed() && self.is_any_group_active() {
             if let Some(ref cpu) = self.cpu {
-                let mut cpu_locked = cpu.lock().unwrap();
-                cpu_locked.request_interrupt(0b00010000);
+                cpu.lock().unwrap().request_interrupt(0b00010000);
             }
         }
     }

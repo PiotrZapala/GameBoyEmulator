@@ -18,7 +18,6 @@ pub fn load_rom(rom_data: Vec<u8>, ram_data: Option<Vec<u8>>) {
     *emulator_instance = Some(emulator);
 }
 
-#[frb]
 pub fn unload_emulator() -> Option<Vec<u8>> {
     let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
     

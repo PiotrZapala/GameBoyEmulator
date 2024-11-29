@@ -47,12 +47,12 @@ impl MMU {
         self.read_byte(pc)
     }
 
-    pub fn fetch_u8(&self, pc: u16) -> u8 {
-        self.read_byte(pc)
+    pub fn fetch_u8(&self, address: u16) -> u8 {
+        self.read_byte(address)
     }
 
-    pub fn fetch_i8(&self, pc: u16) -> i8 {
-        self.read_byte(pc) as i8
+    pub fn fetch_i8(&self, address: u16) -> i8 {
+        self.read_byte(address) as i8
     }
 
     pub fn save_ram(&self) -> Option<Vec<u8>> {
