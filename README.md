@@ -12,7 +12,16 @@ CrabBoy to mobilny emulator tworzony w ramach pracy inżynierskiej, łączący p
   - **`flutter_interface`**: interfejs użytkownika, stworzony w Flutterze.
     
 ## 📁 Struktura projektu
-CrabBoy/ ├── rust_core/ # Moduł odpowiedzialny za rdzeń emulatora │ ├── src/ # Kod źródłowy rdzenia │ ├── Cargo.toml # Konfiguracja projektu Rust │ └── target/ # Pliki wynikowe kompilacji Rust ├── flutter_interface/ # Moduł odpowiedzialny za interfejs użytkownika │ ├── lib/ # Kod źródłowy interfejsu w Dart │ ├── pubspec.yaml # Konfiguracja Fluttera │ └── build/ # Pliki wynikowe kompilacji Fluttera ├── LICENSE # Licencja projektu └── README.md #
+CrabBoy/
+├── rust_core          # Moduł odpowiedzialny za rdzeń emulatora
+│   ├── src
+│   ├── Cargo.toml
+│   └── target
+├── flutter_interface  # Moduł odpowiedzialny za interfejs użytkownika
+│   ├── lib
+│   ├── pubspec.yaml
+│   └── build
+└── README.md           # Dokumentacja projektu
 
 CrabBoy wykorzystuje zaawansowane technologie w celu zapewnienia wydajności i nowoczesności:
 
