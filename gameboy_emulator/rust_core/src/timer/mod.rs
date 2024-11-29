@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use crate::cpu::CPU;
 
 pub struct TIMER {
-    div: u16,          // DIV (Divider Register)
+    div: u8,          // DIV (Divider Register)
     tima: u8,          // TIMA (Timer Counter)
     tma: u8,           // TMA (Timer Modulo)
     tac: u8,           // TAC (Timer Control)
@@ -31,7 +31,7 @@ impl TIMER {
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0xFF04 => (self.div >> 8) as u8,
+            0xFF04 => self.div,
             0xFF05 => self.tima,
             0xFF06 => self.tma,
             0xFF07 => self.tac,

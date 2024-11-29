@@ -50,14 +50,4 @@ impl CARTRIDGE {
             saved_ram,
         }
     }
-
-    pub fn decode_title(&self) -> String {
-        let decoded_title: String = self.title
-            .iter()
-            .take_while(|&&c| c != 0) 
-            .map(|&c| c as char)       
-            .collect();               
-
-        decoded_title
-    }
 }

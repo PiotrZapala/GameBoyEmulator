@@ -179,7 +179,7 @@ impl PPU {
         self.frame_ready = false;
     }
     
-    pub fn is_display_enabled(&self) -> bool {
+    fn is_display_enabled(&self) -> bool {
         (self.lcdc & 0x80) != 0
     }
 
@@ -221,7 +221,7 @@ impl PPU {
         self.dma_transfer_enabled = false;
     }
 
-    pub fn render_scanline(&mut self) {
+    fn render_scanline(&mut self) {
         if !self.is_display_enabled() {
             return;
         }
@@ -232,7 +232,7 @@ impl PPU {
         self.render_sprites();
     }
 
-    pub fn render_background(&mut self) {
+    fn render_background(&mut self) {
         let tile_map_start: usize = if self.lcdc & 0x08 != 0 { 0x9C00 } else { 0x9800 };
         let tile_data_start: usize = if self.lcdc & 0x10 != 0 { 0x8000 } else { 0x8800 };
     
