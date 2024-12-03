@@ -78,12 +78,13 @@ Aby uruchomić aplikację CrabBoy, musisz mieć zainstalowane:
 
 ### 2. Sprawdzenie środowiska
 
-Użyj komendy `flutter doctor`, aby upewnić się, że Twoje środowisko jest gotowe do uruchamiania aplikacji. Minimalne wymagania to:
-[✓] Flutter (Channel stable, 3.24.3)
-[✓] Android toolchain - develop for Android devices (Android SDK version 35.0.0)
-[✓] Xcode - develop for iOS and macOS (Xcode 15.4)
-[✓] Android Studio (version 2023.2)
-[✓] VS Code (version 1.90.2)
+Użyj komendy `flutter doctor`, aby upewnić się, że Twoje środowisko jest gotowe do uruchamiania aplikacji.
+
+- **[✓] Flutter**
+- **[✓] Android**
+- **[✓] Xcode**
+- **[✓] Android Studio**
+- **[✓] VS Code**
 
 ### 3. Instalacja zależności
 
