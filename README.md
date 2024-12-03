@@ -1,6 +1,6 @@
 # 🦀 CrabBoy
 
-CrabBoy to mobilny emulator tworzony w ramach pracy inżynierskiej, łączący potęgę **Rust** i **Flutter** w jednym projekcie. Aplikacja pozwala na emulację przy jednoczesnym zapewnieniu nowoczesnego, responsywnego interfejsu użytkownika.
+CrabBoy to mobilny emulator konsoli GameBoy tworzony w ramach pracy inżynierskiej, łączący potęgę **Rust** i **Flutter** w jednym projekcie. Aplikacja pozwala na emulację przy jednoczesnym zapewnieniu nowoczesnego, responsywnego interfejsu użytkownika.
 
 ## ✨ Kluczowe funkcje
 
