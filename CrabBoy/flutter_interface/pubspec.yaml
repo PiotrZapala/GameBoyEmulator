@@ -1,6 +1,8 @@
 name: flutter_interface
 description: GameBoy emulator for mobile devices.
 
+version: 1.0.0+1
+
 environment:
   sdk: '^3.3.0'
 
