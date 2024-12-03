@@ -37,6 +37,7 @@ pub fn render_frame() -> Option<Vec<u32>> {
     }
 }
 
+#[frb]
 pub fn set_buttons_state(button_states: Vec<u8>) {
     let mut emulator_instance = EMULATOR_INSTANCE.lock().unwrap();
     
