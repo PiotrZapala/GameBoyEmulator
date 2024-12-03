@@ -187,13 +187,9 @@ Przed uruchomieniem aplikacji upewnij się, że masz podłączony **emulator**, 
 
 CrabBoy został stworzony jako projekt inżynierski, łączący nowoczesne technologie Rust i Flutter. Głównym celem było opracowanie wydajnego emulatora Gameboya z intuicyjnym interfejsem użytkownika.
 
----
-
 ## 📄 Licencja
 
 Ten projekt jest licencjonowany na warunkach licencji MIT.  
 Możesz dowiedzieć się więcej o licencji w pliku [LICENSE](./LICENSE).
-
----
 
 Dziękuję za zainteresowanie projektem CrabBoy! 🦀
