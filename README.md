@@ -17,14 +17,42 @@ CrabBoy to mobilny emulator tworzony w ramach pracy inżynierskiej, łączący p
 CrabBoy/
 ├── rust_core          # Moduł odpowiedzialny za rdzeń emulatora
 │   ├── src
+│   │   ├── cpu
+│   │   ├── ppu
+│   │   ├── apu
+│   │   ├── mmu
+│   │   ├── timer
+│   │   ├── joypad
+│   │   ├── bootrom
+│   │   ├── cartridge
+│   │   ├── emulator
+│   │   ├── lib.rs
+│   │   ├── api.rs
+│   │   ├── bridge_generated.io.rs
+│   │   └── bridge_generated.rs
 │   ├── Cargo.toml
+│   ├── Cargo.lock
+│   ├── build_for_android.sh
+│   ├── build_for_ios.sh
 │   └── target
 ├── flutter_interface  # Moduł odpowiedzialny za interfejs użytkownika
 │   ├── lib
+│   │   ├── components
+│   │   ├── pages
+│   │   ├── router
+│   │   ├── services
+│   │   ├── main.dart
+│   │   ├── bridge_definitions.dart
+│   │   └── bridge_generated.dart
+│   ├── android
+│   ├── ios
+│   ├── assets
 │   ├── pubspec.yaml
+│   ├── pubspec.lock
 │   └── build
-└── README.md
-
+└── bridge_generator
+    ├── flutter_rust_bridge_codegen.sh
+    └── flutter_rust_bridge_codegen_ios.sh
 ```
 
 CrabBoy wykorzystuje zaawansowane technologie w celu zapewnienia wydajności i nowoczesności:
