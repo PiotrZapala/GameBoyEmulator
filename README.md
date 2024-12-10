@@ -78,13 +78,16 @@ Aby uruchomić aplikację CrabBoy, musisz mieć zainstalowane:
 
 ### 2. Sprawdzenie środowiska
 
-Użyj komendy `flutter doctor`, aby upewnić się, że Twoje środowisko jest gotowe do uruchamiania aplikacji.
+Użyj komendy `flutter doctor`, aby upewnić się, że Twoje środowisko jest gotowe do uruchamiania aplikacji. Poniżej lista kluczowych narzędzi wraz z ich wersjami:
 
-- **[✓] Flutter**
-- **[✓] Android**
-- **[✓] Xcode**
-- **[✓] Android Studio**
-- **[✓] VS Code**
+- **Flutter (3.24.3)**: Kanał stable
+- **Dart (3.5.3)**: Wersja środowiska Dart
+- **Android SDK (35.0.0)**: W pełni skonfigurowany z akceptowanymi licencjami
+- **Xcode (15.4)**: Z CocoaPods w wersji 1.16.0
+- **Android Studio (2023.2)**: Z Java w wersji **OpenJDK Runtime Environment 17.0.9**
+- **VS Code (1.95.3)**: Z rozszerzeniem Flutter w wersji 3.102.0
+
+> **Notatka**: Podane wersje narzędzi są tymi, z których korzystano podczas tworzenia projektu. Inne wersje mogą działać, ale nie są gwarantowane.
 
 ### 3. Instalacja zależności
 
@@ -180,6 +183,137 @@ Przed uruchomieniem aplikacji upewnij się, że masz podłączony **emulator**, 
      - W Xcode otwórz projekt Fluttera znajdujący się w katalogu `flutter_interface/ios/Runner`.
      - Ustaw swój **team deweloperski** w ustawieniach projektu.
      - Zbuduj aplikację i uruchom ją na urządzeniu.
+
+## Problemy z budowaniem projektu i ich rozwiązania
+
+Podczas testowania projektu na urządzeniu z Linuxem dla aplikacji na Androida mogą wystąpić następujące błędy:
+
+### **1. Błąd: Niekompatybilna wersja Gradle z wersją JDK**
+
+**Objawy:**
+Your project's Gradle version is incompatible with the Java version that Flutter is using for Gradle.
+**Rozwiązanie:**
+Otwórz plik `android/gradle/wrapper/gradle-wrapper.properties` i zmień wartość `distributionUrl` na kompatybilną z używaną wersją JDK:
+
+```properties
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
+```
+
+### **2. Błąd: Nieaktualne ustawienia kompilacji Java**
+
+**Objawy:**
+Execution failed for task ':path_provider_android:compileDebugJavaWithJavac'.
+**Rozwiązanie:**
+Otwórz plik `android/app/build.gradle` i zaktualizuj ustawienia Java:
+
+```properties
+android {
+    ndkVersion = "25.1.8937393"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+```
+
+### **3. Błąd: Niekompatybilna wersja wtyczki Android Gradle Plugin**
+
+**Objawy:**
+Could not resolve all files for configuration ':path_provider_android:androidJdkImage'.
+**Rozwiązanie:**
+Otwórz plik `android/settings.gradle` i zaktualizuj ustawienia:
+
+```properties
+id "com.android.application" version "8.3.1" apply false
+```
+
+## 🛠️ Generowanie statycznych i dynamicznych bibliotek Rust
+
+W przypadku konieczności wygenerowania bibliotek Rust dla platform **iOS** oraz **Android**, przygotowano dwa skrypty w katalogu `rust_core`. Aby z nich skorzystać, wykonaj poniższe kroki:
+
+### 1. Wymagania wstępne
+
+1. Zainstaluj **Rust** oraz narzędzia pomocnicze:
+   ```bash
+   rustup install stable
+   cargo install cargo-ndk
+   cargo install cargo-lipo
+   ```
+2. Dodaj odpowiednie targety Rust:
+   **Dla iOS**:
+
+```bash
+rustup target add aarch64-apple-ios x86_64-apple-ios
+```
+
+**Dla Androida**:
+
+```bash
+rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+```
+
+### 2. Generowanie bibliotek
+
+- **Dla Androida**:
+
+  1. Przejdź do katalogu `rust_core`:
+
+  ```bash
+    cd rust_core
+  ```
+
+  2. Uruchom skrypt:
+
+  ```bash
+    ./build_for_android.sh
+  ```
+
+  3. Biblioteki zostaną wygenerowane i automatycznie przeniesione do folderu `flutter_interface/android/app/src/main/jniLibs`.
+
+- **Dla iOS**:
+  1. Przejdź do katalogu `rust_core`:
+  ```bash
+    cd rust_core
+  ```
+  2. Uruchom skrypt:
+  ```bash
+    ./build_for_ios.sh
+  ```
+  3. Biblioteka zostanie wygenerowana i automatycznie przeniesiona do folderu `flutter_interface/ios/Runner`.
+
+### 3. Konfiguracja w Xcode (dla iOS)
+
+Po wygenerowaniu biblioteki dla iOS należy dodatkowo skonfigurować projekt w Xcode:
+
+- **Dodaj bibliotekę do projektu**:
+
+  1. Przejdź do katalogu `flutter_interface`:
+
+  ```bash
+    cd flutter_interface
+  ```
+
+  2. Uruchom projekt w środowisku Xcode:
+
+  ```bash
+    open ios/Runner.xcworkspace
+  ```
+
+  2. Przejdź do **Build Phases** → **Link Binary With Libraries** dodaj plik `librust_core.a` z folderu `flutter_interface/ios/Runner`.
+
+- **Ustawienia dla symulatora**:
+  1. Jeśli planujesz korzystać z symulatora iOS, musisz dodać odpowiednie ustawienia w sekcji **Build Settings**:
+  - Znajdź pole **Excluded Architectures**.
+  - Dla symulatora ustaw wartość **arm64** w **Profile**, **Debug** i **Release**.
+
+#### 4. Finalizacja konfiguracji:
+
+Po wykonaniu powyższych kroków projekt będzie gotowy do użycia zarówno na urządzeniach fizycznych, jak i w symulatorze.
 
 ## 🧑‍💻 Autor
 
