@@ -184,7 +184,7 @@ Przed uruchomieniem aplikacji upewnij się, że masz podłączony **emulator**, 
      - Ustaw swój **team deweloperski** w ustawieniach projektu.
      - Zbuduj aplikację i uruchom ją na urządzeniu.
 
-## Problemy z budowaniem projektu i ich rozwiązania
+## 🐞 Problemy z budowaniem projektu i ich rozwiązania
 
 Podczas testowania projektu na urządzeniu z Linuxem dla aplikacji na Androida mogą wystąpić następujące błędy:
 
