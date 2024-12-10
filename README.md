@@ -109,14 +109,10 @@ Przed uruchomieniem aplikacji upewnij się, że masz podłączony **emulator**, 
 3. Wybierz **"Create Virtual Device"** i skonfiguruj urządzenie.
 4. Kliknij **Start**, aby uruchomić emulator.
 5. **Uruchom aplikację na urządzeniu**:
-   - W trybie debugowania:
-     ```bash
-     flutter run
-     ```
-   - W trybie wydania:
-     ```bash
-     flutter run --release
-     ```
+
+```bash
+flutter run
+```
 
 #### **Wgrywanie na symulator iOS**
 
@@ -124,14 +120,11 @@ Przed uruchomieniem aplikacji upewnij się, że masz podłączony **emulator**, 
 2. Przejdź do **"Open Developer Tool" → "Simulator"**.
 3. Wybierz odpowiednie urządzenie, aby uruchomić symulator.
 4. **Uruchom aplikację na urządzeniu**:
-   - W trybie debugowania:
-     ```bash
-     flutter run
-     ```
-   - W trybie wydania:
-     ```bash
-     flutter run --release
-     ```
+
+```bash
+flutter run
+```
+
 5. **Dodatkowe kroki dla konta deweloperskiego Apple**:
 
 - W Xcode otwórz projekt Fluttera znajdujący się w katalogu `flutter_interface/ios/Runner`.
@@ -154,14 +147,10 @@ Przed uruchomieniem aplikacji upewnij się, że masz podłączony **emulator**, 
        ```
      - Powinieneś zobaczyć swoje urządzenie na liście podłączonych urządzeń.
   4. **Uruchom aplikację na urządzeniu**:
-     - W trybie debugowania:
-       ```bash
-       flutter run
-       ```
-     - W trybie wydania:
-       ```bash
-       flutter run --release
-       ```
+
+  ```bash
+  flutter run --release
+  ```
 
 - **Dla urządzeń z iOS**:
   1. **Podłącz urządzenie do komputera** za pomocą kabla.
@@ -171,14 +160,9 @@ Przed uruchomieniem aplikacji upewnij się, że masz podłączony **emulator**, 
      - Jeśli urządzenie prosi o zaufanie komputerowi, zaakceptuj to.
      - W razie potrzeby przejdź do ustawień urządzenia i aktywuj tryb deweloperski.
   4. **Uruchom aplikację na urządzeniu**:
-     - W trybie debugowania:
-       ```bash
-       flutter run
-       ```
-     - W trybie wydania:
-       ```bash
-       flutter run --release
-       ```
+  ```bash
+  flutter run --release
+  ```
   5. **Dodatkowe kroki dla konta deweloperskiego Apple**:
      - W Xcode otwórz projekt Fluttera znajdujący się w katalogu `flutter_interface/ios/Runner`.
      - Ustaw swój **team deweloperski** w ustawieniach projektu.
