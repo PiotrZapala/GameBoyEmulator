@@ -82,7 +82,7 @@ Użyj komendy `flutter doctor`, aby upewnić się, że Twoje środowisko jest go
 
 - **Flutter (3.24.3)**: Kanał stable
 - **Dart (3.5.3)**: Wersja środowiska Dart
-- **Android SDK (35.0.0)**: W pełni skonfigurowany z akceptowanymi licencjami
+- **Android SDK (35.0.0)**: W pełni skonfigurowany z zaakceptowanymi licencjami
 - **Xcode (15.4)**: Z CocoaPods w wersji 1.16.0
 - **Android Studio (2023.2)**: Z Java w wersji **OpenJDK Runtime Environment 17.0.9**
 - **VS Code (1.95.3)**: Z rozszerzeniem Flutter w wersji 3.102.0
