@@ -245,7 +245,8 @@ W przypadku konieczności wygenerowania bibliotek Rust dla platform **iOS** oraz
    cargo install cargo-lipo
    ```
 2. Dodaj odpowiednie targety Rust:
-   **Dla iOS**:
+
+**Dla iOS**:
 
 ```bash
 rustup target add aarch64-apple-ios x86_64-apple-ios
